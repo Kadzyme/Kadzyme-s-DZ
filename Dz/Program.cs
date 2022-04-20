@@ -17,7 +17,7 @@ class Dz
         int playerY = rand.Next(1, arrayHeight - 1);
         string[,] array = new string[arrayHeight, arrayWidth];        
         FillArray(array, arrayWidth, arrayHeight, playerX, playerY, wall, coin, player, lockedFinish);
-        Fill(array, arrayWidth, arrayHeight, 0, true, lockedFinish, finish);
+        Fill(wall, coin, player, array, arrayWidth, arrayHeight, 0, true, lockedFinish, finish);
         PlayerMove(playerX, playerY, array, arrayWidth, arrayHeight, wall, coin, player, lockedFinish, finish);
     }
     static void FillArray(string[,] array, int arrayWidth, int arrayHeight, int playerX, int playerY, string wall, string coin, string player, string lockedFinish)
@@ -57,7 +57,7 @@ class Dz
             }
         }
     }
-    static void Fill(string[,] array, int arrayWidth, int arrayHeight, int coins, bool hints, string lockedFinish, string finish)
+    static void Fill(string wall, string coin, string player, string[,] array, int arrayWidth, int arrayHeight, int coins, bool hints, string lockedFinish, string finish)
     {
         int coinsRequire = 10;
         Console.Clear();
@@ -76,7 +76,7 @@ class Dz
         Console.WriteLine($"Coins: {coins}/{coinsRequire}");
         if(hints)
         {
-            Hints();
+            Hints(wall, coin, player, lockedFinish, finish);
             Console.WriteLine("Press H to turn off hints");
         }
         else
@@ -126,17 +126,17 @@ class Dz
                 else
                     hints = true;
             }
-            Fill(array, arrayWidth, arrayHeight, coins, hints, lockedFinish, finish);
+            Fill(wall, coin, player, array, arrayWidth, arrayHeight, coins, hints, lockedFinish, finish);
         }        
     }
-    static void Hints()
+    static void Hints(string wall, string coin, string player, string lockedFinish, string finish)
     {
         Console.WriteLine("------------------------Hints------------------------");
-        Console.WriteLine("@ - this is you, you can walk using arrows");
-        Console.WriteLine("# - it is a wall, you can't go on this cell");
-        Console.WriteLine("O - it is a coin, take them for unlocking finish");
-        Console.WriteLine("L - it is a locked finish, for unlocking you need coins");
-        Console.WriteLine("F - it is an unlocked finish, run in him to win!");
+        Console.WriteLine($"{player} - this is you, you can walk using arrows");
+        Console.WriteLine($"{wall} - it is a wall, you can't go across them");
+        Console.WriteLine($"{coin} - it is a coin, take them for unlocking finish");
+        Console.WriteLine($"{lockedFinish} - it is a locked finish, for unlocking you need coins");
+        Console.WriteLine($"{finish} - it is an unlocked finish, run in him to win!");
         Console.WriteLine("-----------------------------------------------------");
     }
 }
