@@ -69,6 +69,26 @@ class Dz
                 {
                     array[i, j] = finish;
                 }
+                if (array[i,j] == wall)
+                {
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
+                else if (array[i, j] == coin)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                }
+                else if (array[i, j] == lockedFinish)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                }
+                else if (array[i, j] == finish)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                }
+                else if (array[i, j] == player)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                }
                 Console.Write(array[i, j]);
             }
             Console.WriteLine();
