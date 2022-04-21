@@ -5,9 +5,10 @@ class Dz
 {
     static void Main()
     {
-        int coinsRequire = 10;
         string wall = "#";
+        string voidCell = " ";
         string coin = "O";
+        string jetpack = "J";
         string player = "@";
         string lockedFinish = "L";
         string finish = "F";
@@ -17,12 +18,12 @@ class Dz
         int playerX = rand.Next(1, arrayWidth - 1);
         int playerY = rand.Next(1, arrayHeight - 1);
         string[,] array = new string[arrayHeight, arrayWidth];        
-        GenerateArray(array, arrayWidth, arrayHeight, playerX, playerY, wall, coin, player, lockedFinish);
-        DrawArea(wall, coin, player, array, arrayWidth, arrayHeight, 0, true, lockedFinish, finish, coinsRequire, playerX, playerY);
-        PlayerMoving(playerX, playerY, array, arrayWidth, arrayHeight, wall, coin, player, lockedFinish, finish, coinsRequire);
+        GenerateArray(array, arrayWidth, arrayHeight, playerX, playerY, wall, coin, player, lockedFinish, voidCell, jetpack);
+        DrawArea(wall, coin, player, array, arrayWidth, arrayHeight, 0, true, lockedFinish, finish, playerX, playerY, jetpack, false);
+        PlayerMoving(playerX, playerY, array, arrayWidth, arrayHeight, wall, coin, player, lockedFinish, finish, voidCell, jetpack);
     }
 
-    static void GenerateArray(string[,] array, int arrayWidth, int arrayHeight, int playerX, int playerY, string wall, string coin, string player, string lockedFinish)
+    static void GenerateArray(string[,] array, int arrayWidth, int arrayHeight, int playerX, int playerY, string wall, string coin, string player, string lockedFinish, string voidCell, string jetpack)
     {
         Random rand = new Random();
         for (int i = 0; i < arrayHeight; i++)
@@ -30,17 +31,13 @@ class Dz
             for (int j = 0; j < arrayWidth; j++)
             {                
                 int randomNumber = rand.Next(0,100);
-                if (i == playerY && j == playerX)
-                {
-                    array[i, j] = player;
-                }
-                else if (i == 0 || j == 0 || i == arrayHeight - 1 || j == arrayWidth - 1)
+                if (i == 0 || j == 0 || i == arrayHeight - 1 || j == arrayWidth - 1 || randomNumber > 81)
                 {
                     array[i, j] = wall;
                 }
-                else if (randomNumber > 81)
+                else if (randomNumber > 78)
                 {
-                    array[i, j] = wall;
+                    array[i, j] = jetpack;
                 }
                 else if (randomNumber < 7)
                 {
@@ -48,15 +45,15 @@ class Dz
                 }
                 else
                 {
-                    array[i, j] = " ";
+                    array[i, j] = voidCell;
                 }
             }
         }
         bool haveFinish = false;
         while (!haveFinish)
         {
-            int x = rand.Next(0,arrayWidth);        
-            int y = rand.Next(0, arrayHeight);
+            int x = rand.Next(1,arrayWidth - 2);        
+            int y = rand.Next(1, arrayHeight - 2);
             if (x != playerX || y != playerY)
             { 
                 array[y,x] = lockedFinish;
@@ -65,54 +62,76 @@ class Dz
         }
     }
 
-    static void DrawArea(string wall, string coin, string player, string[,] array, int arrayWidth, int arrayHeight, int coins, bool hints, string lockedFinish, string finish, int coinsRequire, int playerX, int playerY)
+    static void DrawArea(string wall, string coin, string player, string[,] array, int arrayWidth, int arrayHeight, int coins, bool hints, string lockedFinish, string finish, int playerX, int playerY, string jetpack, bool jetpackEnabled)
     {
+        string oldChar;
+        int coinsRequire = 10;
         Console.Clear();
-        string[,] arrayForDrawing = array;//problem
-        arrayForDrawing[playerY, playerX] = player;
+        oldChar = array[playerY, playerX];
+        array[playerY, playerX] = player;
         for (int i = 0; i < arrayHeight; i++)
         {
             for (int j = 0; j < arrayWidth; j++)
-            {                
-                if (arrayForDrawing[i,j] == wall)
+            {
+                if (coins >= coinsRequire && array[i, j] == lockedFinish)
                 {
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    array[i, j] = finish;
                 }
-                else if (arrayForDrawing[i, j] == coin)
+                if (array[i,j] == wall)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
                 }
-                else if (arrayForDrawing[i, j] == lockedFinish)
+                else if (array[i, j] == coin)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                }
+                else if (array[i, j] == lockedFinish)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkRed;
                 }
-                else if (arrayForDrawing[i, j] == finish)
+                else if (array[i, j] == finish)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                 }
-                else if (arrayForDrawing[i, j] == player)
+                else if (array[i, j] == jetpack)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                }
+                else if (array[i, j] == player)
                 {
                     Console.ForegroundColor = ConsoleColor.Cyan;
                 }
-                Console.Write(arrayForDrawing[i, j]);
+                Console.Write(array[i, j]);
             }
             Console.WriteLine();
         }
+        array[playerY, playerX] = oldChar;
+        Console.WriteLine("----------------------------------Your Current Information----------------------------------");
         Console.WriteLine($"Coins: {coins}/{coinsRequire}");
-        if(hints)
+        if (jetpackEnabled)
         {
-            Hints(wall, coin, player, lockedFinish, finish);
+            Console.WriteLine($"Jetpack is available");
+        }
+        else
+        {
+            Console.WriteLine($"Jetpack is not available now");
+        }
+        if (hints)
+        {
+            Hints(wall, coin, player, lockedFinish, finish, jetpack);
             Console.WriteLine("Press H to turn off hints");
         }
         else
         {
+            Console.WriteLine("--------------------------------------------------------------------------------------------");
             Console.WriteLine("Press H to turn on hints");
         }
     }
 
-    static void PlayerMoving(int playerX, int playerY, string[,] array, int arrayWidth, int arrayHeight, string wall, string coin, string player, string lockedFinish, string finish, int coinsRequire)
+    static void PlayerMoving(int playerX, int playerY, string[,] array, int arrayWidth, int arrayHeight, string wall, string coin, string player, string lockedFinish, string finish, string voidCell, string jetpack)
     {
         bool the_end = false;
+        bool jetpackEnabled = false;
         int coins = 0;
         bool hints = true;
         while (!the_end)
@@ -134,11 +153,37 @@ class Dz
             {
                 playerX++;
             }
+            else if (key.Key == ConsoleKey.UpArrow && CanPlayerMove(playerY - 2, playerX, array, wall, lockedFinish) && jetpackEnabled)
+            {
+                playerY -= 2;
+                jetpackEnabled = false;
+            }
+            else if (key.Key == ConsoleKey.DownArrow && CanPlayerMove(playerY + 2, playerX, array, wall, lockedFinish) && jetpackEnabled)
+            {
+                playerY += 2;
+                jetpackEnabled = false;
+            }
+            else if (key.Key == ConsoleKey.LeftArrow && CanPlayerMove(playerY, playerX - 2, array, wall, lockedFinish) && jetpackEnabled)
+            {
+                playerX -= 2;
+                jetpackEnabled = false;
+            }
+            else if (key.Key == ConsoleKey.RightArrow && CanPlayerMove(playerY, playerX + 2, array, wall, lockedFinish) && jetpackEnabled)
+            {
+                playerX += 2;
+                jetpackEnabled = false;
+            }
             if (array[playerY, playerX] == coin)
             {
                 coins++;
+                array[playerY, playerX] = voidCell;
             }
-            if (array[playerY, playerX] == finish)
+            else if (array[playerY, playerX] == jetpack && jetpackEnabled == false)
+            {
+                jetpackEnabled = true;
+                array[playerY, playerX] = voidCell;
+            }
+            else if (array[playerY, playerX] == finish)
             {
                 the_end = true;                
             }       
@@ -146,25 +191,22 @@ class Dz
             {                
                 hints = !hints;
             }
-            //if (coins >= coinsRequire && array[,] == lockedFinish)
-            //{
-            //    array[playerY, playerX] = finish;
-            //}
-            DrawArea(wall, coin, player, array, arrayWidth, arrayHeight, coins, hints, lockedFinish, finish, coinsRequire, playerX, playerY);
+            DrawArea(wall, coin, player, array, arrayWidth, arrayHeight, coins, hints, lockedFinish, finish, playerX, playerY, jetpack, jetpackEnabled);
         }        
     }
 
     static bool CanPlayerMove(int playerY, int playerX, string[,] array, string wall, string lockedFinish)
-        =>array[playerY, playerX] != wall && array[playerY, playerX] != lockedFinish;    
+        =>array[playerY, playerX] != wall && array[playerY, playerX] != lockedFinish;
 
-    static void Hints(string wall, string coin, string player, string lockedFinish, string finish)
+    static void Hints(string wall, string coin, string player, string lockedFinish, string finish, string jetpack)
     {
-        Console.WriteLine("------------------------Hints------------------------");
+        Console.WriteLine("-------------------------------------------Hints--------------------------------------------");
         Console.WriteLine($"{player} - this is you, you can walk using arrows");
         Console.WriteLine($"{wall} - it is a wall, you can't go across them");
         Console.WriteLine($"{coin} - it is a coin, take them for unlocking finish");
+        Console.WriteLine($"{jetpack} - it is a jetpack, if you take them, you can walk across 1 wall (don't stacks)");
         Console.WriteLine($"{lockedFinish} - it is a locked finish, for unlocking you need coins");
         Console.WriteLine($"{finish} - it is an unlocked finish, run in him to win!");
-        Console.WriteLine("-----------------------------------------------------");
+        Console.WriteLine("--------------------------------------------------------------------------------------------");
     }
 }
