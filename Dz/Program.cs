@@ -17,17 +17,18 @@ class Dz
     static int playerX;
     static int playerY;
 
-    static int coins = 0;
+    static int coins;
 
     static string[,] array = new string[arrayHeight, arrayWidth];
 
     static bool hints = true;
 
     static void Main()
-    {        
+    {
         Random rand = new Random();
         playerX = rand.Next(1, arrayWidth - 1);
-        playerY = rand.Next(1, arrayHeight - 1); 
+        playerY = rand.Next(1, arrayHeight - 1);
+        coins = 0;
         GenerateArray();
         DrawArea(false);
         PlayerMoving();
