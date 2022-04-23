@@ -126,6 +126,8 @@ class Dz
             Console.WriteLine("--------------------------------------------------------------------------------------------");
             Console.WriteLine("Press H to turn on hints");
         }
+        Console.WriteLine("");
+        Console.WriteLine($"Press R to restart");
     }
 
     static void PlayerMoving(int playerX, int playerY, string[,] array, int arrayWidth, int arrayHeight, string wall, string coin, string player, string lockedFinish, string finish, string voidCell, string jetpack)
@@ -191,8 +193,19 @@ class Dz
             {                
                 hints = !hints;
             }
+            else if (key.Key == ConsoleKey.R)
+            {
+                Main();
+            }
             DrawArea(wall, coin, player, array, arrayWidth, arrayHeight, coins, hints, lockedFinish, finish, playerX, playerY, jetpack, jetpackEnabled);
-        }        
+        }
+        Console.Clear();
+        Console.WriteLine("If you want to restart press R");
+        var keyForRestart = Console.ReadKey();
+        if (keyForRestart.Key == ConsoleKey.R)
+        {
+            Main();
+        }
     }
 
     static bool CanPlayerMove(int playerY, int playerX, string[,] array, string wall, string lockedFinish)
