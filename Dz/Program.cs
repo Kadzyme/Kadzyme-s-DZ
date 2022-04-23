@@ -3,27 +3,35 @@ using System.Collections;
 
 class Dz
 {
+    static string wall = "#";
+    static string voidCell = " ";
+    static string coin = "O";
+    static string jetpack = "J";
+    static string player = "@";
+    static string lockedFinish = "L";
+    static string finish = "F";
+
+    static int arrayWidth = 50;
+    static int arrayHeight = 20;
+
+    static int playerX;
+    static int playerY;
+
+    static string[,] array = new string[arrayHeight, arrayWidth];
+
+    static bool hints = true;
+
     static void Main()
-    {
-        string wall = "#";
-        string voidCell = " ";
-        string coin = "O";
-        string jetpack = "J";
-        string player = "@";
-        string lockedFinish = "L";
-        string finish = "F";
-        int arrayWidth = 50;
-        int arrayHeight = 20;
+    {        
         Random rand = new Random();
-        int playerX = rand.Next(1, arrayWidth - 1);
-        int playerY = rand.Next(1, arrayHeight - 1);
-        string[,] array = new string[arrayHeight, arrayWidth];        
-        GenerateArray(array, arrayWidth, arrayHeight, playerX, playerY, wall, coin, player, lockedFinish, voidCell, jetpack);
-        DrawArea(wall, coin, player, array, arrayWidth, arrayHeight, 0, true, lockedFinish, finish, playerX, playerY, jetpack, false);
-        PlayerMoving(playerX, playerY, array, arrayWidth, arrayHeight, wall, coin, player, lockedFinish, finish, voidCell, jetpack);
+        playerX = rand.Next(1, arrayWidth - 1);
+        playerY = rand.Next(1, arrayHeight - 1); 
+        GenerateArray();
+        DrawArea(0, false);
+        PlayerMoving();
     }
 
-    static void GenerateArray(string[,] array, int arrayWidth, int arrayHeight, int playerX, int playerY, string wall, string coin, string player, string lockedFinish, string voidCell, string jetpack)
+    static void GenerateArray()
     {
         Random rand = new Random();
         for (int i = 0; i < arrayHeight; i++)
@@ -62,7 +70,7 @@ class Dz
         }
     }
 
-    static void DrawArea(string wall, string coin, string player, string[,] array, int arrayWidth, int arrayHeight, int coins, bool hints, string lockedFinish, string finish, int playerX, int playerY, string jetpack, bool jetpackEnabled)
+    static void DrawArea(int coins, bool jetpackEnabled)
     {
         string oldChar;
         int coinsRequire = 10;
@@ -118,7 +126,7 @@ class Dz
         }
         if (hints)
         {
-            Hints(wall, coin, player, lockedFinish, finish, jetpack);
+            Hints();
             Console.WriteLine("Press H to turn off hints");
         }
         else
@@ -130,47 +138,46 @@ class Dz
         Console.WriteLine($"Press R to restart");
     }
 
-    static void PlayerMoving(int playerX, int playerY, string[,] array, int arrayWidth, int arrayHeight, string wall, string coin, string player, string lockedFinish, string finish, string voidCell, string jetpack)
+    static void PlayerMoving()
     {
         bool the_end = false;
         bool jetpackEnabled = false;
         int coins = 0;
-        bool hints = true;
         while (!the_end)
         {
             var key = Console.ReadKey();
-            if (key.Key == ConsoleKey.UpArrow && CanPlayerMove(playerY - 1, playerX, array, wall, lockedFinish))
+            if (key.Key == ConsoleKey.UpArrow && CanPlayerMove(playerY - 1, playerX))
             {
                 playerY--;
             }
-            else if (key.Key == ConsoleKey.DownArrow && CanPlayerMove(playerY + 1, playerX, array, wall, lockedFinish))
+            else if (key.Key == ConsoleKey.DownArrow && CanPlayerMove(playerY + 1, playerX))
             {
                 playerY++;
             }
-            else if (key.Key == ConsoleKey.LeftArrow && CanPlayerMove(playerY, playerX - 1, array, wall, lockedFinish))
+            else if (key.Key == ConsoleKey.LeftArrow && CanPlayerMove(playerY, playerX - 1))
             {
                 playerX--;                
             }
-            else if (key.Key == ConsoleKey.RightArrow && CanPlayerMove(playerY, playerX + 1, array, wall, lockedFinish))
+            else if (key.Key == ConsoleKey.RightArrow && CanPlayerMove(playerY, playerX + 1))
             {
                 playerX++;
             }
-            else if (key.Key == ConsoleKey.UpArrow && CanPlayerMove(playerY - 2, playerX, array, wall, lockedFinish) && jetpackEnabled)
+            else if (key.Key == ConsoleKey.UpArrow && CanPlayerMove(playerY - 2, playerX) && jetpackEnabled)
             {
                 playerY -= 2;
                 jetpackEnabled = false;
             }
-            else if (key.Key == ConsoleKey.DownArrow && CanPlayerMove(playerY + 2, playerX, array, wall, lockedFinish) && jetpackEnabled)
+            else if (key.Key == ConsoleKey.DownArrow && CanPlayerMove(playerY + 2, playerX) && jetpackEnabled)
             {
                 playerY += 2;
                 jetpackEnabled = false;
             }
-            else if (key.Key == ConsoleKey.LeftArrow && CanPlayerMove(playerY, playerX - 2, array, wall, lockedFinish) && jetpackEnabled)
+            else if (key.Key == ConsoleKey.LeftArrow && CanPlayerMove(playerY, playerX - 2) && jetpackEnabled)
             {
                 playerX -= 2;
                 jetpackEnabled = false;
             }
-            else if (key.Key == ConsoleKey.RightArrow && CanPlayerMove(playerY, playerX + 2, array, wall, lockedFinish) && jetpackEnabled)
+            else if (key.Key == ConsoleKey.RightArrow && CanPlayerMove(playerY, playerX + 2) && jetpackEnabled)
             {
                 playerX += 2;
                 jetpackEnabled = false;
@@ -197,8 +204,12 @@ class Dz
             {
                 Main();
             }
-            DrawArea(wall, coin, player, array, arrayWidth, arrayHeight, coins, hints, lockedFinish, finish, playerX, playerY, jetpack, jetpackEnabled);
+            DrawArea(coins, jetpackEnabled);
         }
+        The_End();
+    }
+    static void The_End()
+    {
         Console.Clear();
         Console.WriteLine("If you want to restart press R");
         var keyForRestart = Console.ReadKey();
@@ -207,11 +218,10 @@ class Dz
             Main();
         }
     }
-
-    static bool CanPlayerMove(int playerY, int playerX, string[,] array, string wall, string lockedFinish)
+    static bool CanPlayerMove(int playerY, int playerX)
         =>array[playerY, playerX] != wall && array[playerY, playerX] != lockedFinish;
 
-    static void Hints(string wall, string coin, string player, string lockedFinish, string finish, string jetpack)
+    static void Hints()
     {
         Console.WriteLine("-------------------------------------------Hints--------------------------------------------");
         Console.WriteLine($"{player} - this is you, you can walk using arrows");
