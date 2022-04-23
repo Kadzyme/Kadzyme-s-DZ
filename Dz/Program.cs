@@ -22,6 +22,7 @@ class Dz
     static string[,] array = new string[arrayHeight, arrayWidth];
 
     static bool hints = true;
+    static bool jetpackEnabled;
 
     static void Main()
     {
@@ -29,8 +30,9 @@ class Dz
         playerX = rand.Next(1, arrayWidth - 1);
         playerY = rand.Next(1, arrayHeight - 1);
         coins = 0;
+        jetpackEnabled = false;
         GenerateArray();
-        DrawArea(false);
+        DrawArea();
         PlayerMoving();
     }
 
@@ -73,7 +75,7 @@ class Dz
         }
     }
 
-    static void DrawArea(bool jetpackEnabled)
+    static void DrawArea()
     {
         string oldChar;
         int coinsRequire = 10;
@@ -144,7 +146,6 @@ class Dz
     static void PlayerMoving()
     {
         bool the_end = false;
-        bool jetpackEnabled = false;
         int coins = 0;
         while (!the_end)
         {
@@ -207,7 +208,7 @@ class Dz
             {
                 Main();
             }
-            DrawArea(jetpackEnabled);
+            DrawArea();
         }
         The_End();
     }
