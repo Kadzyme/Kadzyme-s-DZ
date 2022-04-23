@@ -10,12 +10,14 @@ class Dz
     static string player = "@";
     static string lockedFinish = "L";
     static string finish = "F";
-
+    
     static int arrayWidth = 50;
     static int arrayHeight = 20;
 
     static int playerX;
     static int playerY;
+
+    static int coins = 0;
 
     static string[,] array = new string[arrayHeight, arrayWidth];
 
@@ -27,7 +29,7 @@ class Dz
         playerX = rand.Next(1, arrayWidth - 1);
         playerY = rand.Next(1, arrayHeight - 1); 
         GenerateArray();
-        DrawArea(0, false);
+        DrawArea(false);
         PlayerMoving();
     }
 
@@ -70,7 +72,7 @@ class Dz
         }
     }
 
-    static void DrawArea(int coins, bool jetpackEnabled)
+    static void DrawArea(bool jetpackEnabled)
     {
         string oldChar;
         int coinsRequire = 10;
@@ -204,7 +206,7 @@ class Dz
             {
                 Main();
             }
-            DrawArea(coins, jetpackEnabled);
+            DrawArea(jetpackEnabled);
         }
         The_End();
     }
