@@ -3,9 +3,9 @@ using System.Collections;
 
 class Dz
 {
-    static string wall = "#";
+    static string wall = "█";
     static string voidCell = " ";
-    static string coin = "O";
+    static string coin = "$";
     static string jetpack = "J";
     static string player = "@";
     static string lockedFinish = "L";
@@ -18,6 +18,7 @@ class Dz
     static int playerY;
 
     static int coins;
+    static int coinsRequire;
 
     static string[,] array = new string[arrayHeight, arrayWidth];
 
@@ -29,6 +30,7 @@ class Dz
         Random rand = new Random();
         playerX = rand.Next(1, arrayWidth - 1);
         playerY = rand.Next(1, arrayHeight - 1);
+        coinsRequire = 10;
         coins = 0;
         jetpackEnabled = false;
         GenerateArray();
@@ -78,7 +80,6 @@ class Dz
     static void DrawArea()
     {
         string oldChar;
-        int coinsRequire = 10;
         Console.Clear();
         oldChar = array[playerY, playerX];
         array[playerY, playerX] = player;
@@ -146,7 +147,6 @@ class Dz
     static void PlayerMoving()
     {
         bool the_end = false;
-        int coins = 0;
         while (!the_end)
         {
             var key = Console.ReadKey();
@@ -186,7 +186,7 @@ class Dz
                 playerX += 2;
                 jetpackEnabled = false;
             }
-            if (array[playerY, playerX] == coin)
+            if (array[playerY, playerX] == coin && coins < coinsRequire)
             {
                 coins++;
                 array[playerY, playerX] = voidCell;
