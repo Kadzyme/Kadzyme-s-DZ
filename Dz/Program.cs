@@ -3,15 +3,19 @@ using System.Collections;
 
 namespace Dz
 {
-    public struct PlayerCoords
+    public struct Player
     {
+        public string[,] array;
         public int playerX;
         public int playerY;
-         
-        public PlayerCoords(int playerX, int playerY)
+        public int numberOfLivingShipCells;
+
+        public Player(string[,] array, int playerX,int playerY, int numberOfLivingShipCells)
         {
+            this.array = array;
             this.playerX = playerX;
             this.playerY = playerY;
+            this.numberOfLivingShipCells = numberOfLivingShipCells;
         }
     }
     public class Symbols
@@ -21,33 +25,25 @@ namespace Dz
         public string miss = "#";
         public string hit = "*";
     }
-    public enum Direction
-    {
-        right,
-        left,
-        up,
-        down
-    }
 
     class Dz
     {
-        private Symbols symbols = new Symbols();
-        private PlayerCoords playerCoords;
-        private Direction direction;
+        private readonly Symbols symbols = new Symbols();
 
-        private int arraySize = 11;
-        private int numberOfLivingShipCells;
-        private int numberOfEnemyLivingShipCells;
+        private Player[] player = new Player[2];
 
-        private string[,] array = new string[arraySize, arraySize];
-        private string[,] enemyArray = new string[arraySize, arraySize];
+        private readonly int arraySize = 10;
 
         private bool hints = true;
         private bool battle;
         private bool theEnd;
-        private bool firstPlayerTurn;
 
-        static int[] limitForShips = new int[5];
+        private int[] limitForShips = new int[5];
+
+        private int playerTurn = 0;
+        private int nextPlayer;
+
+        private ConsoleKeyInfo key;
 
         static void Main()
         {
@@ -57,27 +53,30 @@ namespace Dz
 
         public void Start()
         {
-            numberOfEnemyLivingShipCells = 0;
-            numberOfLivingShipCells = 0;
+            for (int i = 0; i < player.Length; i++)
+            {
+                player[i].array = new string[arraySize, arraySize];
+                player[i].numberOfLivingShipCells = 0;
+                player[i].playerX = 0;
+                player[i].playerY = 0;
+                GenerateArea(i);
+            }
+            nextPlayer = playerTurn + 1;
             theEnd = false;
-            playerCoords.playerX = 0;
-            playerCoords.playerY = 0;
             battle = false;
-            firstPlayerTurn = true;
             GenerateLimitForShipsNumber();
-            GenerateArea();
-            DrawArea();
+            DrawArea(playerTurn);
+            Information();
             PlayerMoving();
         }
 
-        private void GenerateArea()
+        private void GenerateArea(int playerNumber)
         {
             for (int i = 0; i < arraySize; i++)
             {
                 for (int j = 0; j < arraySize; j++)
                 {
-                    array[i, j] = symbols.voidCell;
-                    enemyArray[i, j] = symbols.voidCell;
+                    player[playerNumber].array[i, j] = symbols.voidCell;
                 }
             }
         }
@@ -91,62 +90,34 @@ namespace Dz
         }
 
         private void GenerationShips(int size)
-        {
-            int numberOfShip = 0;
-            Console.WriteLine("Press arrow for choosing direction");
-            var key = Console.ReadKey();
-            switch (key.Key)
+        {            
+            if (size > 0)
             {
-                case ConsoleKey.RightArrow:
-                    direction = Direction.right;
-                    break;
-                case ConsoleKey.LeftArrow:
-                    direction = Direction.left;
-                    break;
-                case ConsoleKey.UpArrow:
-                    direction = Direction.up;
-                    break;
-                case ConsoleKey.DownArrow:
-                    direction = Direction.down;
-                    break;
-                default:
-                    direction = 0;
-                    break;
+                Console.WriteLine("Press arrow for choosing direction");
+                key = Console.ReadKey();
             }
             if (CanYouSpawnShip(size))
             {
                 limitForShips[size]--;
-                numberOfLivingShipCells += size;
-                if (direction == Direction.right)
+                player[playerTurn].numberOfLivingShipCells += size;
+                bool RaiseX = false;
+                bool RaiseY = false;
+                bool LowX = false;
+                if (key.Key == ConsoleKey.RightArrow)
                 {
-                    for (int l = playerCoords.playerX; l < playerCoords.playerX + size; l++)
-                    {
-                        array[playerCoords.playerY, l] = symbols.ship;
-                    }
+                    RaiseX = true;
                 }
-                else if (direction == Direction.left)
+                else if (key.Key == ConsoleKey.LeftArrow)
                 {
-                    for (int l = playerCoords.playerX; l > playerCoords.playerX - size; l--)
-                    {
-                        array[playerCoords.playerY, l] = symbols.ship;
-                    }
+                    LowX = true;
                 }
-                else if (direction == Direction.up)
+                else if (key.Key == ConsoleKey.DownArrow)
                 {
-                    for (int l = playerCoords.playerY; l > playerCoords.playerY - size; l--)
-                    {
-                        array[l, playerCoords.playerX] = symbols.ship;
-                    }
+                    RaiseY = true;
                 }
-                else if (direction == Direction.down)
-                {
-                    for (int l = playerCoords.playerY; l < playerCoords.playerY + size; l++)
-                    {
-                        array[l, playerCoords.playerX] = symbols.ship;
-                    }
-                }
-                numberOfShip++;
-                DrawArea();
+                GenerateShipCells(RaiseX, LowX, RaiseY, size);
+                DrawArea(playerTurn);
+                Information();
             }
             else
             {
@@ -154,28 +125,53 @@ namespace Dz
             }
         }
 
+        private void GenerateShipCells(bool RaiseX, bool LowX, bool RaiseY, int size)
+        {
+            int x = 0, y = 0;
+            for (int l = 0; l < size; l++)
+            {
+                player[playerTurn].array[player[playerTurn].playerY + y, player[playerTurn].playerX + x] = symbols.ship;
+                if(RaiseX)
+                {
+                    x++;
+                }
+                else if (RaiseY)
+                {
+                    y++;
+                }
+                else if (LowX)
+                {
+                    x--;
+                }
+                else
+                {
+                    y--;
+                }
+            }
+        }
+
         private void PlayerMoving()
         {
-            int size = 3;
+            int size = 1;
             while (!theEnd)
             {
-                ConsoleKeyInfo key = Console.ReadKey();
-                size = EnterSize(key, size);
-                if (key.Key == ConsoleKey.RightArrow && CanYouMovePlayer(playerCoords.playerX + 1))
+                key = Console.ReadKey();
+                size = EnterSize(size);
+                if (key.Key == ConsoleKey.RightArrow && CanYouMovePlayer(player[playerTurn].playerX + 1))
                 {
-                    playerCoords.playerX++;
+                    player[playerTurn].playerX++;
                 }
-                else if (key.Key == ConsoleKey.LeftArrow)
+                else if (key.Key == ConsoleKey.LeftArrow && CanYouMovePlayer(player[playerTurn].playerX - 1))
                 {
-                    playerCoords.playerX--;
+                    player[playerTurn].playerX--;
                 }
-                else if (key.Key == ConsoleKey.UpArrow)
+                else if (key.Key == ConsoleKey.UpArrow && CanYouMovePlayer(player[playerTurn].playerY - 1))
                 {
-                    playerCoords.playerY--;
+                    player[playerTurn].playerY--;
                 }
-                else if (key.Key == ConsoleKey.DownArrow)
+                else if (key.Key == ConsoleKey.DownArrow && CanYouMovePlayer(player[playerTurn].playerY + 1))
                 {
-                    playerCoords.playerY++;
+                    player[playerTurn].playerY++;
                 }
                 if (key.Key == ConsoleKey.H)
                 {
@@ -195,7 +191,7 @@ namespace Dz
                 }
                 if (!battle)
                 {
-                    int j = 0;
+                    int j = 1;
                     for (int i = 1; i < limitForShips.Length; i++)
                     {
                         if (!DoYouHaveLimitForThisShip(i))
@@ -203,9 +199,9 @@ namespace Dz
                             j++;
                         }
                     }
-                    if (j == limitForShips.Length - 1)
+                    if (j == limitForShips.Length)
                     {
-                        if (!firstPlayerTurn)
+                        if (playerTurn == player.Length - 1)
                         {
                             battle = true;
                         }
@@ -213,11 +209,18 @@ namespace Dz
                         {
                             GenerateLimitForShipsNumber();
                         }
-                        ChangeTurn();
+                        playerTurn = ChangeTurn(playerTurn);
+                        nextPlayer = ChangeTurn(nextPlayer);
                     }
 
                 }
-                DrawArea();
+                Console.Clear();
+                if (battle)
+                {
+                    DrawArea(nextPlayer);
+                }
+                DrawArea(playerTurn);
+                Information();
             }
             The_End();
         }
@@ -225,57 +228,58 @@ namespace Dz
         private bool CanYouMovePlayer(int coord)
             => coord >= 0 && coord < arraySize;
 
-        private void ChangeTurn()
-        {
-            string[,] arrayForChanging = new string[arraySize, arraySize];
-            int num = numberOfEnemyLivingShipCells;
-            numberOfEnemyLivingShipCells = numberOfLivingShipCells;
-            numberOfLivingShipCells = num;
-            Random rand = new Random();
-            playerCoords.playerX = rand.Next(0, arraySize - 1);
-            playerCoords.playerY = rand.Next(0, arraySize - 1);
-            arrayForChanging = enemyArray;
-            enemyArray = array;
-            array = arrayForChanging;
-            firstPlayerTurn = !firstPlayerTurn;
-        }
-
         private void Shoot()
         {
-            if (enemyArray[playerCoords.playerY, playerCoords.playerX] == symbols.ship)
+            if (player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] == symbols.ship)
             {
                 Console.WriteLine("You hited an enemy!!!");
                 Console.WriteLine("You can walk again!!!");
-                enemyArray[playerCoords.playerY, playerCoords.playerX] = symbols.hit;
-                numberOfEnemyLivingShipCells--;
-                if (numberOfEnemyLivingShipCells <= 0)
+                player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] = symbols.hit;
+                player[nextPlayer].numberOfLivingShipCells--;
+                if (player[nextPlayer].numberOfLivingShipCells <= 0)
                 {
                     theEnd = true;
                 }
             }
-            else if (enemyArray[playerCoords.playerY, playerCoords.playerX] != symbols.miss && enemyArray[playerCoords.playerY, playerCoords.playerX] != symbols.hit)
+            else if (player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] != symbols.miss && player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] != symbols.hit)
             {
                 Console.WriteLine("You missed :(");
-                enemyArray[playerCoords.playerY, playerCoords.playerX] = symbols.miss;
-                ChangeTurn();
+                player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] = symbols.miss;
+                playerTurn = ChangeTurn(playerTurn);
+                nextPlayer = ChangeTurn(nextPlayer);
             }
             else
             {
                 Console.WriteLine("You can't shoot in this place");
             }
             Thread.Sleep(1200);
+        }
+
+        private int ChangeTurn(int num)
+        {
+            num++;
+            if (num == player.Length)
+            {
+                num = 0;
+            }
             Console.Clear();
             Console.WriteLine("Press any button to change player");
             var key = Console.ReadKey();
+            return num;
         }
-        private int EnterSize(ConsoleKeyInfo key, int size)
+
+        private int EnterSize(int size)
         {
             var changeSize = new Dictionary<ConsoleKey, int>()
             {
                 [ConsoleKey.NumPad1] = 1,
                 [ConsoleKey.NumPad2] = 2,
                 [ConsoleKey.NumPad3] = 3,
-                [ConsoleKey.NumPad4] = 4
+                [ConsoleKey.NumPad4] = 4,
+                [ConsoleKey.D1] = 1,
+                [ConsoleKey.D2] = 2,
+                [ConsoleKey.D3] = 3,
+                [ConsoleKey.D4] = 4
             };
             try
             {
@@ -287,35 +291,30 @@ namespace Dz
             }
         }
 
-        private void DrawArea()
+        private void DrawArea(int numOfPlayer)
         {
-            Console.Clear();
-            if (battle)
-            {
-                DrawEnemyArea();
-            }
-            Console.WriteLine("Your area:");
+            Console.WriteLine($"{numOfPlayer + 1} player's area:");
             for (int i = 0; i < arraySize; i++)
             {
                 for (int j = 0; j < arraySize; j++)
                 {
-                    if (i == playerCoords.playerY && j == playerCoords.playerX && !battle)
+                    Console.BackgroundColor = ConsoleColor.Blue;
+                    if (i == player[numOfPlayer].playerY && j == player[numOfPlayer].playerX)
                     {
-                        Console.BackgroundColor = ConsoleColor.Red;
+                        if (!battle && numOfPlayer == playerTurn || battle && numOfPlayer != playerTurn)
+                        {
+                            Console.BackgroundColor = ConsoleColor.Red;
+                        }
                     }
-                    else
-                    {
-                        Console.BackgroundColor = ConsoleColor.Blue;
-                    }
-                    if (array[i, j] == symbols.ship)
+                    if (player[numOfPlayer].array[i, j] == symbols.ship)
                     {
                         Console.ForegroundColor = ConsoleColor.Gray;
                     }
-                    else if (array[i, j] == symbols.miss)
+                    else if (player[numOfPlayer].array[i, j] == symbols.miss)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
                     }
-                    else if (array[i, j] == symbols.hit)
+                    else if (player[numOfPlayer].array[i, j] == symbols.hit)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkRed;
                     }
@@ -323,93 +322,20 @@ namespace Dz
                     {
                         Console.ForegroundColor = ConsoleColor.White;
                     }
-                    Console.Write(array[i, j]);
-                }
-                Console.WriteLine();
-            }
-            Console.BackgroundColor = ConsoleColor.Black;
-            Console.WriteLine("---------------------------------Your Current Information-----------------------------------");
-            if (!battle)
-            {
-                for (int i = 1; i < limitForShips.Length; i++)
-                {
-                    if (limitForShips[i] > 0)
-                        Console.WriteLine($"You can place {limitForShips[i]} ships with {i} deck(s)");
-                }
-            }
-            else if (firstPlayerTurn)
-            {
-                Console.WriteLine("First player's turn");
-            }
-            else
-            {
-                Console.WriteLine("Second player's turn");
-            }
-            if (hints)
-            {
-                Hints();
-                Console.WriteLine("Press H to turn off hints");
-            }
-            else
-            {
-                Console.WriteLine("--------------------------------------------------------------------------------------------");
-                Console.WriteLine("Press H to turn on hints");
-            }
-            Console.WriteLine();
-            Console.WriteLine($"Press R to restart");
-        }
-
-        private void DrawEnemyArea()
-        {
-            Console.WriteLine("Enemy area:");
-            for (int i = 0; i < arraySize; i++)
-            {
-                for (int j = 0; j < arraySize; j++)
-                {
-                    if (i == playerCoords.playerY && j == playerCoords.playerX)
-                    {
-                        Console.BackgroundColor = ConsoleColor.Red;
-                    }
-                    else
-                    {
-                        Console.BackgroundColor = ConsoleColor.Blue;
-                    }
-                    if (enemyArray[i, j] == symbols.miss)
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkBlue;
-                    }
-                    else if (enemyArray[i, j] == symbols.hit)
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkRed;
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.White;
-                    }
-                    if (enemyArray[i, j] == symbols.ship)
-                    {
+                    if (numOfPlayer != playerTurn && player[numOfPlayer].array[i, j] == symbols.ship)
                         Console.Write(symbols.voidCell);
-                    }
                     else
-                    {
-                        Console.Write(enemyArray[i, j]);
-                    }
+                        Console.Write(player[numOfPlayer].array[i, j]);
+                    Console.BackgroundColor = ConsoleColor.Black;
                 }
                 Console.WriteLine();
-            }
+            }            
         }
 
         private void The_End()
         {
             Console.Clear();
-            if (firstPlayerTurn)
-            {
-                Console.WriteLine("First player won!!!");
-            }
-            else
-            {
-                Console.WriteLine("Second player won!!!");
-            }
+            Console.WriteLine($"{playerTurn + 1} player won!!!");            
             Console.WriteLine("If you want to restart press R");
             var keyForRestart = Console.ReadKey();
             if (keyForRestart.Key == ConsoleKey.R)
@@ -429,19 +355,39 @@ namespace Dz
             int y = 0;            
             for (int l = 0; l < shipSize; l++)
             {
-                for (int i = playerCoords.playerY + y + 1; i >= playerCoords.playerY + y - 1; i--)
-                {
-                    for (int j = playerCoords.playerX + x - 1; j <= playerCoords.playerX + x + 1; j++)
+                for (int i = player[playerTurn].playerY + y + 1; i >= player[playerTurn].playerY + y - 1; i--)
+                {                    
+                    for (int j = player[playerTurn].playerX + x - 1; j <= player[playerTurn].playerX + x + 1; j++)
                     {
-                        if (i >= 0 && j >= 0 && i < arraySize && j < arraySize && array[i, j] == symbols.ship)
+                        if (i >= 0 && j >= 0 && i < arraySize && j < arraySize && player[playerTurn].array[i, j] == symbols.ship)
                         {
                             Console.WriteLine("You can't place ship in this place");
                             return false;
                         }
                     }
+                    var changeX = new Dictionary<ConsoleKey, int>()
+                    {
+                        [ConsoleKey.RightArrow] = x++,
+                        [ConsoleKey.LeftArrow] = x--
+                    };
+                    try
+                    {
+                        x = changeX[key.Key];
+                    }
+                    catch
+                    { }
+                    var changeY = new Dictionary<ConsoleKey, int>()
+                    {
+                        [ConsoleKey.DownArrow] = y++,
+                        [ConsoleKey.UpArrow] = y--
+                    };
+                    try
+                    {
+                        y = changeY[key.Key];
+                    }
+                    catch
+                    { }
                 }
-                //int p = dictionary[direction];
-                //Vector<int> fr = new Vector<int>(arr,y);
             }
             return true;
         }
@@ -457,6 +403,35 @@ namespace Dz
             }
             return true;
         }        
+
+        private void Information()
+        {
+            Console.WriteLine("--------------------------------------Current Information---------------------------------------");
+            if (!battle)
+            {
+                for (int i = 1; i < limitForShips.Length; i++)
+                {
+                    if (limitForShips[i] > 0)
+                        Console.WriteLine($"You can place {limitForShips[i]} ships with {i} deck(s)");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"{playerTurn + 1} player's turn");
+            }
+            if (hints)
+            {
+                Hints();
+                Console.WriteLine("Press H to turn off hints");
+            }
+            else
+            {
+                Console.WriteLine("--------------------------------------------------------------------------------------------");
+                Console.WriteLine("Press H to turn on hints");
+            }
+            Console.WriteLine();
+            Console.WriteLine($"Press R to restart");
+        }
 
         private void Hints()
         {
