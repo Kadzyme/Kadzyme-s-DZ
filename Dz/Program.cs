@@ -25,12 +25,22 @@ namespace Dz
         public string miss = "#";
         public string hit = "*";
     }
+    public enum Direction
+    {
+        up,
+        left,
+        right,
+        down,
+        nothing
+    }
 
     class Dz
     {
         private readonly Symbols symbols = new Symbols();
 
         private Player[] player = new Player[2];
+
+        private Direction direction;
 
         private readonly int arraySize = 10;
 
@@ -95,27 +105,13 @@ namespace Dz
             {
                 Console.WriteLine("Press arrow for choosing direction");
                 key = Console.ReadKey();
+                DirectionChange();
             }
-            if (CanYouSpawnShip(size))
+            if (direction != Direction.nothing && CanYouSpawnShip(size))
             {
                 limitForShips[size]--;
                 player[playerTurn].numberOfLivingShipCells += size;
-                bool RaiseX = false;
-                bool RaiseY = false;
-                bool LowX = false;
-                if (key.Key == ConsoleKey.RightArrow)
-                {
-                    RaiseX = true;
-                }
-                else if (key.Key == ConsoleKey.LeftArrow)
-                {
-                    LowX = true;
-                }
-                else if (key.Key == ConsoleKey.DownArrow)
-                {
-                    RaiseY = true;
-                }
-                GenerateShipCells(RaiseX, LowX, RaiseY, size);
+                GenerateShipCells(size);
                 DrawArea(playerTurn);
                 Information();
             }
@@ -125,28 +121,36 @@ namespace Dz
             }
         }
 
-        private void GenerateShipCells(bool RaiseX, bool LowX, bool RaiseY, int size)
+        private void DirectionChange()
+        {
+            switch (key.Key)
+            {
+                case ConsoleKey.LeftArrow:
+                    direction = Direction.left;
+                    break;
+                case ConsoleKey.RightArrow:
+                    direction = Direction.right;
+                    break;
+                case ConsoleKey.UpArrow:
+                    direction = Direction.up;
+                    break;
+                case ConsoleKey.DownArrow:
+                    direction = Direction.down;
+                    break;
+                default:
+                    direction = Direction.nothing;
+                    break;
+            }
+        }
+
+        private void GenerateShipCells(int size)
         {
             int x = 0, y = 0;
             for (int l = 0; l < size; l++)
             {
                 player[playerTurn].array[player[playerTurn].playerY + y, player[playerTurn].playerX + x] = symbols.ship;
-                if(RaiseX)
-                {
-                    x++;
-                }
-                else if (RaiseY)
-                {
-                    y++;
-                }
-                else if (LowX)
-                {
-                    x--;
-                }
-                else
-                {
-                    y--;
-                }
+                x = ChangeX(x);
+                y = ChangeY(y);
             }
         }
 
@@ -157,22 +161,30 @@ namespace Dz
             {
                 key = Console.ReadKey();
                 size = EnterSize(size);
-                if (key.Key == ConsoleKey.RightArrow && CanYouMovePlayer(player[playerTurn].playerX + 1))
+                DirectionChange();
+                if (CanYouMovePlayer(ChangeX(player[playerTurn].playerX)))
+                    player[playerTurn].playerX = ChangeX(player[playerTurn].playerX);
+                if (CanYouMovePlayer(ChangeY(player[playerTurn].playerY)))
+                    player[playerTurn].playerY = ChangeY(player[playerTurn].playerY);
+                Console.WriteLine(direction);
+                /*try
                 {
-                    player[playerTurn].playerX++;
+                    if (CanYouMovePlayer(ChangeX(player[playerTurn].playerX)))
+                        player[playerTurn].playerX = ChangeX(player[playerTurn].playerX);
                 }
-                else if (key.Key == ConsoleKey.LeftArrow && CanYouMovePlayer(player[playerTurn].playerX - 1))
+                catch
                 {
-                    player[playerTurn].playerX--;
-                }
-                else if (key.Key == ConsoleKey.UpArrow && CanYouMovePlayer(player[playerTurn].playerY - 1))
-                {
-                    player[playerTurn].playerY--;
-                }
-                else if (key.Key == ConsoleKey.DownArrow && CanYouMovePlayer(player[playerTurn].playerY + 1))
-                {
-                    player[playerTurn].playerY++;
-                }
+                    Console.WriteLine("You can't moveX");
+                    try
+                    {
+                        if (CanYouMovePlayer(ChangeY(player[playerTurn].playerY)))
+                            player[playerTurn].playerY = ChangeY(player[playerTurn].playerY); ;
+                    }
+                    catch
+                    {
+                        Console.WriteLine("You can't moveY");
+                    }
+                }*/
                 if (key.Key == ConsoleKey.H)
                 {
                     hints = !hints;
@@ -199,7 +211,7 @@ namespace Dz
                             j++;
                         }
                     }
-                    if (j == limitForShips.Length)
+                    if (j >= limitForShips.Length)
                     {
                         if (playerTurn == player.Length - 1)
                         {
@@ -230,23 +242,31 @@ namespace Dz
 
         private void Shoot()
         {
-            if (player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] == symbols.ship)
+            if (player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] == symbols.ship)
             {
                 Console.WriteLine("You hited an enemy!!!");
                 Console.WriteLine("You can walk again!!!");
-                player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] = symbols.hit;
+                player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] = symbols.hit;
                 player[nextPlayer].numberOfLivingShipCells--;
                 if (player[nextPlayer].numberOfLivingShipCells <= 0)
+                {
+                    Console.WriteLine($"{nextPlayer + 1} is died...");
+                }
+                if (nextPlayer == playerTurn)
                 {
                     theEnd = true;
                 }
             }
-            else if (player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] != symbols.miss && player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] != symbols.hit)
+            else if (player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] == symbols.voidCell)
             {
                 Console.WriteLine("You missed :(");
-                player[nextPlayer].array[player[nextPlayer].playerY, player[nextPlayer].playerX] = symbols.miss;
+                player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] = symbols.miss;
                 playerTurn = ChangeTurn(playerTurn);
                 nextPlayer = ChangeTurn(nextPlayer);
+                Console.Clear();
+                Console.WriteLine("Press any button to change player");
+                Console.WriteLine($"Next player: {nextPlayer + 1}");
+                var key = Console.ReadKey();
             }
             else
             {
@@ -257,14 +277,25 @@ namespace Dz
 
         private int ChangeTurn(int num)
         {
-            num++;
-            if (num == player.Length)
+            if(!battle)
             {
-                num = 0;
+                num++;
+                if (num >= player.Length)
+                {
+                    num = 0;
+                }
             }
-            Console.Clear();
-            Console.WriteLine("Press any button to change player");
-            var key = Console.ReadKey();
+            else
+            {
+                while (player[num].numberOfLivingShipCells <= 0)
+                {
+                    num++;
+                    if (num >= player.Length)
+                    {
+                        num = 0;
+                    }
+                }
+            }
             return num;
         }
 
@@ -299,12 +330,13 @@ namespace Dz
                 for (int j = 0; j < arraySize; j++)
                 {
                     Console.BackgroundColor = ConsoleColor.Blue;
-                    if (i == player[numOfPlayer].playerY && j == player[numOfPlayer].playerX)
+                    if (i == player[numOfPlayer].playerY && j == player[numOfPlayer].playerX && !battle && numOfPlayer == playerTurn)
                     {
-                        if (!battle && numOfPlayer == playerTurn || battle && numOfPlayer != playerTurn)
-                        {
-                            Console.BackgroundColor = ConsoleColor.Red;
-                        }
+                        Console.BackgroundColor = ConsoleColor.Red;                        
+                    }
+                    else if (i == player[playerTurn].playerY && j == player[playerTurn].playerX && battle && numOfPlayer != playerTurn)
+                    {
+                        Console.BackgroundColor = ConsoleColor.Red;
                     }
                     if (player[numOfPlayer].array[i, j] == symbols.ship)
                     {
@@ -326,10 +358,10 @@ namespace Dz
                         Console.Write(symbols.voidCell);
                     else
                         Console.Write(player[numOfPlayer].array[i, j]);
-                    Console.BackgroundColor = ConsoleColor.Black;
                 }
                 Console.WriteLine();
-            }            
+            }
+            Console.BackgroundColor = ConsoleColor.Black;
         }
 
         private void The_End()
@@ -365,31 +397,46 @@ namespace Dz
                             return false;
                         }
                     }
-                    var changeX = new Dictionary<ConsoleKey, int>()
-                    {
-                        [ConsoleKey.RightArrow] = x++,
-                        [ConsoleKey.LeftArrow] = x--
-                    };
-                    try
-                    {
-                        x = changeX[key.Key];
-                    }
-                    catch
-                    { }
-                    var changeY = new Dictionary<ConsoleKey, int>()
-                    {
-                        [ConsoleKey.DownArrow] = y++,
-                        [ConsoleKey.UpArrow] = y--
-                    };
-                    try
-                    {
-                        y = changeY[key.Key];
-                    }
-                    catch
-                    { }
                 }
+                x = ChangeX(x);
+                y = ChangeY(y);
             }
             return true;
+        }
+
+        private int ChangeX(int num)
+        {
+            var change = new Dictionary<Direction, int>()
+            {
+                [Direction.right] = num + 1,
+                [Direction.left] = num - 1
+            };
+            try
+            {
+                return change[direction];
+            }
+            catch
+            { 
+                return num;             
+            }
+            
+        }
+
+        private int ChangeY(int num)
+        {
+            var change = new Dictionary<Direction, int>()
+            {
+                [Direction.down] = num + 1,
+                [Direction.up] = num - 1
+            };
+            try
+            {
+                return change[direction];
+            }
+            catch
+            {
+                return num;
+            }
         }
 
         private bool DoYouHaveLimitForThisShip(int size)
