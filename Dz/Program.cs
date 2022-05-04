@@ -45,8 +45,10 @@ namespace Dz
         private readonly int arraySize = 10;
 
         private bool hints = true;
+
         private bool battle;
         private bool theEnd;
+        private int playersAlive;
 
         private int[] limitForShips = new int[5];
 
@@ -71,6 +73,7 @@ namespace Dz
                 player[i].playerY = 0;
                 GenerateArea(i);
             }
+            playersAlive = player.Length;
             nextPlayer = playerTurn + 1;
             theEnd = false;
             battle = false;
@@ -250,9 +253,10 @@ namespace Dz
                 player[nextPlayer].numberOfLivingShipCells--;
                 if (player[nextPlayer].numberOfLivingShipCells <= 0)
                 {
-                    Console.WriteLine($"{nextPlayer + 1} is died...");
+                    Console.WriteLine($"{nextPlayer + 1} player is died...");
+                    playersAlive--;
                 }
-                if (nextPlayer == playerTurn)
+                if (playersAlive <= 1)
                 {
                     theEnd = true;
                 }
@@ -263,16 +267,11 @@ namespace Dz
                 player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] = symbols.miss;
                 playerTurn = ChangeTurn(playerTurn);
                 nextPlayer = ChangeTurn(nextPlayer);
-                Console.Clear();
-                Console.WriteLine("Press any button to change player");
-                Console.WriteLine($"Next player: {nextPlayer + 1}");
-                var key = Console.ReadKey();
             }
             else
             {
                 Console.WriteLine("You can't shoot in this place");
             }
-            Thread.Sleep(1200);
         }
 
         private int ChangeTurn(int num)
@@ -287,13 +286,25 @@ namespace Dz
             }
             else
             {
-                while (player[num].numberOfLivingShipCells <= 0)
+                for (int i = num; i < player.Length + num; i++)
                 {
                     num++;
                     if (num >= player.Length)
                     {
                         num = 0;
                     }
+                    if (player[num].numberOfLivingShipCells > 0)
+                    {
+                        break;
+                    }
+                }
+                if (num == nextPlayer)
+                {
+                    Thread.Sleep(1200);
+                    Console.Clear();
+                    Console.WriteLine("Press any button to change player");
+                    Console.WriteLine($"Next player: {nextPlayer + 1}");
+                    var key = Console.ReadKey();
                 }
             }
             return num;
