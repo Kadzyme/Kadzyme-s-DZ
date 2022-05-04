@@ -260,6 +260,7 @@ namespace Dz
                 {
                     theEnd = true;
                 }
+                Thread.Sleep(1200);
             }
             else if (player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] == symbols.voidCell)
             {
