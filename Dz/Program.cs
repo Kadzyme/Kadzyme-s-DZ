@@ -38,7 +38,7 @@ namespace Dz
     {
         private readonly Symbols symbols = new Symbols();
 
-        private Player[] player = new Player[2];
+        private Player[] player = new Player[3];
 
         private Direction direction;
 
@@ -255,6 +255,8 @@ namespace Dz
                 {
                     Console.WriteLine($"{nextPlayer + 1} player is died...");
                     playersAlive--;
+                    playerTurn = ChangeTurn(playerTurn);
+                    nextPlayer = ChangeTurn(nextPlayer);
                 }
                 if (playersAlive <= 1)
                 {
@@ -277,36 +279,25 @@ namespace Dz
 
         private int ChangeTurn(int num)
         {
-            if(!battle)
+            for (int i = num; i < player.Length + num; i++)
             {
                 num++;
                 if (num >= player.Length)
                 {
                     num = 0;
                 }
+                if (player[num].numberOfLivingShipCells > 0 && battle || !battle)
+                {
+                    break;
+                }
             }
-            else
+            if (num == nextPlayer)
             {
-                for (int i = num; i < player.Length + num; i++)
-                {
-                    num++;
-                    if (num >= player.Length)
-                    {
-                        num = 0;
-                    }
-                    if (player[num].numberOfLivingShipCells > 0)
-                    {
-                        break;
-                    }
-                }
-                if (num == nextPlayer)
-                {
-                    Thread.Sleep(1200);
-                    Console.Clear();
-                    Console.WriteLine("Press any button to change player");
-                    Console.WriteLine($"Next player: {nextPlayer + 1}");
-                    var key = Console.ReadKey();
-                }
+                Thread.Sleep(1200);
+                Console.Clear();
+                Console.WriteLine("Press any button to change player");
+                Console.WriteLine($"Next player: {nextPlayer + 1}");
+                var key = Console.ReadKey();
             }
             return num;
         }
