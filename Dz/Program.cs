@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Dz
 {
-    public class Player
+    public struct Player
     {
         public string[,] array;
         public int playerX;
@@ -20,10 +20,10 @@ namespace Dz
     }
     public class Symbols
     {
-        public const string ship = "█";
-        public const string voidCell = " ";
-        public const string miss = "#";
-        public const string hit = "X";
+        public string ship = "█";
+        public string voidCell = " ";
+        public string miss = "#";
+        public string hit = "X";
     }
     public enum Direction
     {
@@ -36,7 +36,23 @@ namespace Dz
 
     class Dz
     {
-        private Player[] player = new Player[3];
+        /*private static int SetNumberOfPlayers()
+        {
+            int size = 0;
+            bool start = false;
+            while (!start)
+            {
+                Console.WriteLine("Set number of players");
+                size = Console.Read();
+                if (size > 1)
+                    start = true;
+            }
+            return size;
+        }*/
+
+        private readonly Symbols symbols = new Symbols();
+
+        private Player[] player = new Player[1];
 
         private Direction direction;
 
@@ -61,6 +77,15 @@ namespace Dz
             dz.Start();
         }
 
+        /*public void Lobby() //coming soon
+        {
+            bool start = false;
+            while (!start)
+            {
+
+            }
+        }*/
+
         private void Start()
         {
             Console.Clear();
@@ -79,7 +104,7 @@ namespace Dz
             GenerateLimitForShipsNumber();
             DrawArea(playerTurn);
             Information();
-            GameLoop();
+            PlayerMoving();
         }
 
         private void GenerateArea(int playerNumber)
@@ -88,7 +113,7 @@ namespace Dz
             {
                 for (int j = 0; j < arraySize; j++)
                 {
-                    player[playerNumber].array[i, j] = Symbols.voidCell;
+                    player[playerNumber].array[i, j] = symbols.voidCell;
                 }
             }
         }
@@ -147,13 +172,13 @@ namespace Dz
             int x = 0, y = 0;
             for (int l = 0; l < size; l++)
             {
-                player[playerTurn].array[player[playerTurn].playerY + y, player[playerTurn].playerX + x] = Symbols.ship;
+                player[playerTurn].array[player[playerTurn].playerY + y, player[playerTurn].playerX + x] = symbols.ship;
                 x = ChangeX(x);
                 y = ChangeY(y);
             }
         }
 
-        private void GameLoop()
+        private void PlayerMoving()
         {
             int size = 1;
             while (!theEnd)
@@ -166,6 +191,24 @@ namespace Dz
                 if (CanYouMovePlayer(ChangeY(player[playerTurn].playerY)))
                     player[playerTurn].playerY = ChangeY(player[playerTurn].playerY);
                 Console.WriteLine(direction);
+                /*try
+                {
+                    if (CanYouMovePlayer(ChangeX(player[playerTurn].playerX)))
+                        player[playerTurn].playerX = ChangeX(player[playerTurn].playerX);
+                }
+                catch
+                {
+                    Console.WriteLine("You can't moveX");
+                    try
+                    {
+                        if (CanYouMovePlayer(ChangeY(player[playerTurn].playerY)))
+                            player[playerTurn].playerY = ChangeY(player[playerTurn].playerY); ;
+                    }
+                    catch
+                    {
+                        Console.WriteLine("You can't moveY");
+                    }
+                }*/
                 if (key.Key == ConsoleKey.H)
                 {
                     hints = !hints;
@@ -223,11 +266,11 @@ namespace Dz
 
         private void Shoot()
         {
-            if (player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] == Symbols.ship)
+            if (player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] == symbols.ship)
             {
                 Console.WriteLine("You hited an enemy!!!");
                 Console.WriteLine("You can walk again!!!");
-                player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] = Symbols.hit;
+                player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] = symbols.hit;
                 player[nextPlayer].numberOfLivingShipCells--;
                 if (player[nextPlayer].numberOfLivingShipCells <= 0)
                 {
@@ -241,10 +284,10 @@ namespace Dz
                 }
                 Thread.Sleep(1200);
             }
-            else if (player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] == Symbols.voidCell)
+            else if (player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] == symbols.voidCell)
             {
                 Console.WriteLine("You missed :(");
-                player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] = Symbols.miss;
+                player[nextPlayer].array[player[playerTurn].playerY, player[playerTurn].playerX] = symbols.miss;
                 playerTurn = ChangeTurn(playerTurn);
                 nextPlayer = ChangeTurn(nextPlayer);
             }
@@ -318,16 +361,15 @@ namespace Dz
                     {
                         Console.BackgroundColor = ConsoleColor.Red;
                     }
-                    ///////////////////////////
-                    if (player[numOfPlayer].array[i, j] == Symbols.ship)
+                    if (player[numOfPlayer].array[i, j] == symbols.ship)
                     {
                         Console.ForegroundColor = ConsoleColor.Gray;
                     }
-                    else if (player[numOfPlayer].array[i, j] == Symbols.miss)
+                    else if (player[numOfPlayer].array[i, j] == symbols.miss)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
                     }
-                    else if (player[numOfPlayer].array[i, j] == Symbols.hit)
+                    else if (player[numOfPlayer].array[i, j] == symbols.hit)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkRed;
                     }
@@ -335,9 +377,8 @@ namespace Dz
                     {
                         Console.ForegroundColor = ConsoleColor.White;
                     }
-                    //////////////////////////////
-                    if (numOfPlayer != playerTurn && player[numOfPlayer].array[i, j] == Symbols.ship)
-                        Console.Write(Symbols.voidCell);
+                    if (numOfPlayer != playerTurn && player[numOfPlayer].array[i, j] == symbols.ship)
+                        Console.Write(symbols.voidCell);
                     else
                         Console.Write(player[numOfPlayer].array[i, j]);
                 }
@@ -345,12 +386,6 @@ namespace Dz
             }
             Console.BackgroundColor = ConsoleColor.Black;
         }
-
-        /*private ConsoleColor ChangeForeGroundColor()        
-            => ConsoleColor switch
-            {
-                ConosoleColor
-            }*/
 
         private void The_End()
         {
@@ -379,7 +414,7 @@ namespace Dz
                 {                    
                     for (int j = player[playerTurn].playerX + x - 1; j <= player[playerTurn].playerX + x + 1; j++)
                     {
-                        if (i >= 0 && j >= 0 && i < arraySize && j < arraySize && player[playerTurn].array[i, j] == Symbols.ship)
+                        if (i >= 0 && j >= 0 && i < arraySize && j < arraySize && player[playerTurn].array[i, j] == symbols.ship)
                         {
                             Console.WriteLine("You can't place ship in this place");
                             return false;
