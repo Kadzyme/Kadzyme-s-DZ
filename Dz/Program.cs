@@ -81,7 +81,7 @@ namespace Dz
             GenerateLimitForShipsNumber();
             DrawArea(playerTurn);
             Information();
-            PlayerMoving();
+            GameLoop();
         }
 
         private void GenerateArea(int playerNumber)
@@ -155,7 +155,7 @@ namespace Dz
             }
         }
 
-        private void PlayerMoving()
+        private void GameLoop()
         {
             int size = 1;
             while (!theEnd)
