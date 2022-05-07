@@ -279,7 +279,7 @@ namespace Dz
 
         private int ChangeTurn(int num)
         {
-            for (int i = num; i < player.Length + num; i++)
+            for (int i = 0; i < player.Length; i++)
             {
                 num++;
                 if (num >= player.Length)
