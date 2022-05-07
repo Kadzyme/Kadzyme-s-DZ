@@ -10,7 +10,7 @@ namespace Dz
         public int playerY;
         public int numberOfLivingShipCells;
 
-        public Player(string[,] array, int playerX,int playerY, int numberOfLivingShipCells)
+        public Player(string[,] array, int playerX,int playerY, int numberOfLivingShipCells, bool bot)
         {
             this.array = array;
             this.playerX = playerX;
@@ -23,7 +23,7 @@ namespace Dz
         public string ship = "█";
         public string voidCell = " ";
         public string miss = "#";
-        public string hit = "*";
+        public string hit = "X";
     }
     public enum Direction
     {
@@ -36,9 +36,23 @@ namespace Dz
 
     class Dz
     {
+        /*private static int SetNumberOfPlayers()
+        {
+            int size = 0;
+            bool start = false;
+            while (!start)
+            {
+                Console.WriteLine("Set number of players");
+                size = Console.Read();
+                if (size > 1)
+                    start = true;
+            }
+            return size;
+        }*/
+
         private readonly Symbols symbols = new Symbols();
 
-        private Player[] player = new Player[3];
+        private Player[] player = new Player[1];
 
         private Direction direction;
 
@@ -63,8 +77,18 @@ namespace Dz
             dz.Start();
         }
 
-        public void Start()
+        /*public void Lobby() //coming soon
         {
+            bool start = false;
+            while (!start)
+            {
+
+            }
+        }*/
+
+        private void Start()
+        {
+            Console.Clear();
             for (int i = 0; i < player.Length; i++)
             {
                 player[i].array = new string[arraySize, arraySize];
@@ -103,13 +127,10 @@ namespace Dz
         }
 
         private void GenerationShips(int size)
-        {            
-            if (size > 0)
-            {
-                Console.WriteLine("Press arrow for choosing direction");
-                key = Console.ReadKey();
-                DirectionChange();
-            }
+        {
+            Console.WriteLine("Press arrow for choosing direction");
+            key = Console.ReadKey();
+            DirectionChange();
             if (direction != Direction.nothing && CanYouSpawnShip(size))
             {
                 limitForShips[size]--;
