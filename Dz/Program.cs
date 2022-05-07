@@ -255,7 +255,6 @@ namespace Dz
                 {
                     Console.WriteLine($"{nextPlayer + 1} player is died...");
                     playersAlive--;
-                    playerTurn = ChangeTurn(playerTurn);
                     nextPlayer = ChangeTurn(nextPlayer);
                 }
                 if (playersAlive <= 1)
