@@ -36,23 +36,9 @@ namespace Dz
 
     class Dz
     {
-        /*private static int SetNumberOfPlayers()
-        {
-            int size = 0;
-            bool start = false;
-            while (!start)
-            {
-                Console.WriteLine("Set number of players");
-                size = Console.Read();
-                if (size > 1)
-                    start = true;
-            }
-            return size;
-        }*/
-
         private readonly Symbols symbols = new Symbols();
 
-        private Player[] player = new Player[1];
+        private Player[] player = new Player[3];
 
         private Direction direction;
 
@@ -77,15 +63,6 @@ namespace Dz
             dz.Start();
         }
 
-        /*public void Lobby() //coming soon
-        {
-            bool start = false;
-            while (!start)
-            {
-
-            }
-        }*/
-
         private void Start()
         {
             Console.Clear();
@@ -104,7 +81,7 @@ namespace Dz
             GenerateLimitForShipsNumber();
             DrawArea(playerTurn);
             Information();
-            PlayerMoving();
+            GameLoop();
         }
 
         private void GenerateArea(int playerNumber)
@@ -178,7 +155,7 @@ namespace Dz
             }
         }
 
-        private void PlayerMoving()
+        private void GameLoop()
         {
             int size = 1;
             while (!theEnd)
@@ -191,24 +168,6 @@ namespace Dz
                 if (CanYouMovePlayer(ChangeY(player[playerTurn].playerY)))
                     player[playerTurn].playerY = ChangeY(player[playerTurn].playerY);
                 Console.WriteLine(direction);
-                /*try
-                {
-                    if (CanYouMovePlayer(ChangeX(player[playerTurn].playerX)))
-                        player[playerTurn].playerX = ChangeX(player[playerTurn].playerX);
-                }
-                catch
-                {
-                    Console.WriteLine("You can't moveX");
-                    try
-                    {
-                        if (CanYouMovePlayer(ChangeY(player[playerTurn].playerY)))
-                            player[playerTurn].playerY = ChangeY(player[playerTurn].playerY); ;
-                    }
-                    catch
-                    {
-                        Console.WriteLine("You can't moveY");
-                    }
-                }*/
                 if (key.Key == ConsoleKey.H)
                 {
                     hints = !hints;
