@@ -50,7 +50,7 @@ namespace Dz
         private bool theEnd;
         private bool canSeeBotArea = false;
         private int playersAlive;
-        private int roundsForWin = 0;
+        private int? roundsForWin = null;
 
         private Player[] player = new Player[SetNumberOfPlayers()];
         
@@ -92,40 +92,17 @@ namespace Dz
 
         private void Lobby()
         {
-            while (roundsForWin <= 0)
+            while (roundsForWin == null)
             {
                 Console.Clear();
                 Console.WriteLine("Enter number of won rounds that needed for win in the game!");
                 Console.WriteLine("You can enter number from 1 to 5");
-                key = Console.ReadKey();
-                switch (key.Key)
-                {
-                    case ConsoleKey.NumPad1:
-                    case ConsoleKey.D1:
-                        roundsForWin = 1;
-                        break;
-                    case ConsoleKey.NumPad2:
-                    case ConsoleKey.D2:
-                        roundsForWin = 2;
-                        break;
-                    case ConsoleKey.NumPad3:
-                    case ConsoleKey.D3:
-                        roundsForWin = 3;
-                        break;
-                    case ConsoleKey.NumPad4:
-                    case ConsoleKey.D4:
-                        roundsForWin = 4;
-                        break;
-                    case ConsoleKey.NumPad5:
-                    case ConsoleKey.D5:
-                        roundsForWin = 5;
-                        break;
-                }
+                roundsForWin = EnterNum();
             }
             bool start = false;
             while (!start)
             {
-                int? num = null;
+                int? num;
                 Console.Clear();
                 for (int i = 0; i < player.Length; i++)
                 {
@@ -140,25 +117,9 @@ namespace Dz
                 else
                     Console.WriteLine("Press S to see bot area");
                 Console.WriteLine("Press Enter to start game");
-                key = Console.ReadKey();
+                num = EnterNum() - 1;
                 switch (key.Key)
-                {
-                    case ConsoleKey.NumPad1:
-                    case ConsoleKey.D1:
-                        num = 0;
-                        break;
-                    case ConsoleKey.NumPad2:
-                    case ConsoleKey.D2:
-                        num = 1;
-                        break;
-                    case ConsoleKey.NumPad3:
-                    case ConsoleKey.D3:
-                        num = 2;
-                        break;
-                    case ConsoleKey.NumPad4:
-                    case ConsoleKey.D4:
-                        num = 3;
-                        break;
+                {                    
                     case ConsoleKey.Enter:
                         start = true;
                         break;
@@ -169,12 +130,36 @@ namespace Dz
                 if (num != null && player.Length > num)
                     player[Convert.ToInt32(num)].bot = !player[Convert.ToInt32(num)].bot;
             }
-            playersAlive = player.Length;
             for (int i = 0; i < player.Length; i++)
             {
                 player[i].wins = 0;
             }
             Start();
+        }
+
+        private int? EnterNum()
+        {
+            key = Console.ReadKey();
+            switch (key.Key)
+            {
+                case ConsoleKey.NumPad1:
+                case ConsoleKey.D1:
+                    return 1;
+                case ConsoleKey.NumPad2:
+                case ConsoleKey.D2:
+                    return 2;
+                case ConsoleKey.NumPad3:
+                case ConsoleKey.D3:
+                    return 3;
+                case ConsoleKey.NumPad4:
+                case ConsoleKey.D4:
+                    return 4;
+                case ConsoleKey.NumPad5:
+                case ConsoleKey.D5:
+                    return 5;
+                default:
+                    return null;
+            }
         }
 
         private void Start()
@@ -188,6 +173,7 @@ namespace Dz
                 player[i].playerY = 0;
                 GenerateArea(i);
             }
+            playersAlive = player.Length;
             playerTurn = 0;
             nextPlayer = playerTurn + 1;
             theEnd = false;
@@ -513,6 +499,7 @@ namespace Dz
         private void TheEnd()
         {
             Console.Clear();
+            player[playerTurn].wins++;
             if (player[playerTurn].wins >= roundsForWin)
             {
                 Console.Clear();
@@ -524,7 +511,6 @@ namespace Dz
             else
             {
                 Console.WriteLine($"{playerTurn + 1} player won this round!!!");
-                player[playerTurn].wins++;
                 Console.WriteLine();
                 Console.WriteLine("Wins of players:");
                 for (int i = 0; i < player.Length; i++)
