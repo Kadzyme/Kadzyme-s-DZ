@@ -56,7 +56,7 @@ namespace Dz
         
         private int[] limitForShips = new int[5];
 
-        private int playerTurn = 0;
+        private int playerTurn;
         private int nextPlayer;
 
         private ConsoleKeyInfo key;
@@ -188,6 +188,7 @@ namespace Dz
             nextPlayer = playerTurn + 1;
             theEnd = false;
             battle = false;
+            playerTurn = 0;
             GenerateLimitForShipsNumber();
             DrawArea(playerTurn);
             Information();
@@ -252,7 +253,7 @@ namespace Dz
                     nextPlayer = ChangeTurn(nextPlayer);
                 }
             }
-            else
+            else if (!player[playerTurn].bot)
             {
                 Thread.Sleep(1169);
             }
@@ -282,10 +283,10 @@ namespace Dz
 
         private void GenerateShipCells(int size)
         {
-            int x = 0, y = 0;
+            int x = player[playerTurn].playerX, y = player[playerTurn].playerY;
             for (int l = 0; l < size; l++)
             {
-                CurrentPlayer().array[CurrentPlayer().playerY + y, CurrentPlayer().playerX + x] = Symbols.ship;
+                player[playerTurn].array[y, x] = Symbols.ship;
                 x = ChangeX(x);
                 y = ChangeY(y);
             }
@@ -301,9 +302,9 @@ namespace Dz
                     key = Console.ReadKey();
                     size = EnterSize(size);
                     DirectionChange();
-                    if (CanYouMovePlayer(ChangeX(player[playerTurn].playerX)))
+                    if (ThisCoordInArray(ChangeX(player[playerTurn].playerX)))
                         player[playerTurn].playerX = ChangeX(player[playerTurn].playerX);
-                    if (CanYouMovePlayer(ChangeY(player[playerTurn].playerY)))
+                    if (ThisCoordInArray(ChangeY(player[playerTurn].playerY)))
                         player[playerTurn].playerY = ChangeY(player[playerTurn].playerY);
                     switch (key.Key)
                     {
@@ -325,21 +326,41 @@ namespace Dz
                     }
                 }
                 else
-                {
+                {                    
                     Random rand = new Random();
-                    player[playerTurn].playerX = rand.Next(0, player[playerTurn].array.Length);
-                    player[playerTurn].playerY = rand.Next(0, player[playerTurn].array.Length);             
+                    player[playerTurn].playerX = rand.Next(0, arraySize);
+                    player[playerTurn].playerY = rand.Next(0, arraySize);
+                    Console.Clear();
                     if (battle)
+                        DrawArea(nextPlayer);
+                    if (canSeeBotArea)
+                    {
+                        DrawArea(playerTurn);
+                        Information();
+                    }
+                    if (battle)
+                    {
+                        Thread.Sleep(400);
                         Shoot();
+                    }
                     else
+                    {
                         GenerationShips(size);
+                    }
+                    size = rand.Next(1, 5);
                 }                
                 Console.Clear();
                 if (battle)                
                     DrawArea(nextPlayer);                
                 if (!player[playerTurn].bot || (player[playerTurn].bot && canSeeBotArea))
+                {
                     DrawArea(playerTurn);
-                Information();
+                    Information();
+                }
+                else if (!battle)
+                {
+                    Console.WriteLine("Wait...");
+                }
                 if (playersAlive <= 1)
                 {
                     theEnd = true;
@@ -362,7 +383,7 @@ namespace Dz
                 direction = Direction.down;
         }
 
-        private bool CanYouMovePlayer(int coord)
+        private bool ThisCoordInArray(int coord)
             => coord >= 0 && coord < arraySize;
 
         private void Shoot()
@@ -379,7 +400,6 @@ namespace Dz
                     playersAlive--;
                     nextPlayer = ChangeTurn(nextPlayer);
                 }
-                Thread.Sleep(1200);
             }
             else if (NextPlayer().array[CurrentPlayer().playerY, CurrentPlayer().playerX] == Symbols.voidCell)
             {
@@ -392,6 +412,7 @@ namespace Dz
             {
                 Console.WriteLine("You can't shoot in this place");
             }
+            Thread.Sleep(900);
         }
 
         private Player NextPlayer()
@@ -456,7 +477,7 @@ namespace Dz
                 for (int j = 0; j < arraySize; j++)
                 {
                     Console.BackgroundColor = ConsoleColor.Blue;
-                    if (ArrayCoordsEqualsPlayerCoords(i, j, numOfPlayer) && ThisArrayNeededForDrawingPlayer(numOfPlayer))
+                    if (ArrayCoordsEqualsPlayerCoords(i, j) && ThisArrayNeededForDrawingPlayer(numOfPlayer))
                     {
                         Console.BackgroundColor = ConsoleColor.Red;                        
                     }
@@ -471,8 +492,8 @@ namespace Dz
             Console.BackgroundColor = ConsoleColor.Black;
         }
 
-        private bool ArrayCoordsEqualsPlayerCoords(int i, int j, int numOfPlayer)
-            => i == player[numOfPlayer].playerY && j == player[numOfPlayer].playerX;
+        private bool ArrayCoordsEqualsPlayerCoords(int i, int j)
+            => i == player[playerTurn].playerY && j == player[playerTurn].playerX;
 
         private bool ThisArrayNeededForDrawingPlayer(int numOfPlayer)
             => (!battle && numOfPlayer == playerTurn) || (battle && numOfPlayer == nextPlayer);
@@ -501,7 +522,16 @@ namespace Dz
             {
                 Console.WriteLine($"{playerTurn + 1} player won this round!!!");
                 player[playerTurn].wins++;
-                GameLoop();
+                Console.WriteLine();
+                Console.WriteLine("Wins of players:");
+                for (int i = 0; i < player.Length; i++)
+                {
+                    Console.WriteLine($"Player {i + 1}: {player[i].wins} wins");
+                }
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue");
+                Console.ReadKey();
+                Start();
             }
         }
 
@@ -512,15 +542,20 @@ namespace Dz
                 Console.WriteLine("You haven't limit for this ship");
                 return false;
             }
-            int x = 0;
-            int y = 0;            
+            int x = player[playerTurn].playerX;
+            int y = player[playerTurn].playerY;            
             for (int l = 0; l < shipSize; l++)
             {
-                for (int i = player[playerTurn].playerY + y + 1; i >= player[playerTurn].playerY + y - 1; i--)
+                if (!ThisCoordInArray(x) || !ThisCoordInArray(y))
+                {
+                    Console.WriteLine("You can't place ship in this place");
+                    return false;
+                }
+                for (int i = y - 1; i <= y + 1; i++)
                 {                    
-                    for (int j = player[playerTurn].playerX + x - 1; j <= player[playerTurn].playerX + x + 1; j++)
+                    for (int j = x - 1; j <= x + 1; j++)
                     {
-                        if (i >= 0 && j >= 0 && i < arraySize && j < arraySize && player[playerTurn].array[i, j] == Symbols.ship)
+                        if (ThisCoordInArray(i) && ThisCoordInArray(j) && player[playerTurn].array[i, j] == Symbols.ship)
                         {
                             Console.WriteLine("You can't place ship in this place");
                             return false;
