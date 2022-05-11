@@ -64,7 +64,7 @@ namespace Dz
         static void Main()
         {
             var dz = new Dz();            
-            dz.Lobby();
+            dz.Settings();
         }
 
         static int SetNumberOfPlayers()
@@ -90,7 +90,7 @@ namespace Dz
             }
         }
 
-        private void Lobby()
+        private void Settings()
         {
             while (roundsForWin == null)
             {
@@ -304,7 +304,7 @@ namespace Dz
                             Start();
                             break;
                         case ConsoleKey.S:
-                            Lobby();
+                            Settings();
                             break;
                         case ConsoleKey.Enter:
                             if (battle)
@@ -506,7 +506,7 @@ namespace Dz
                 Console.WriteLine($"{playerTurn + 1} player won in this game!!!");
                 Console.WriteLine("Press any key to continue");
                 Console.ReadKey();
-                Lobby();
+                Settings();
             }
             else
             {
