@@ -170,6 +170,10 @@ namespace Dz
                     player[Convert.ToInt32(num)].bot = !player[Convert.ToInt32(num)].bot;
             }
             playersAlive = player.Length;
+            for (int i = 0; i < player.Length; i++)
+            {
+                player[i].wins = 0;
+            }
             Start();
         }
 
@@ -182,13 +186,12 @@ namespace Dz
                 player[i].numberOfLivingShipCells = 0;
                 player[i].playerX = 0;
                 player[i].playerY = 0;
-                player[i].wins = 0;
                 GenerateArea(i);
             }
+            playerTurn = 0;
             nextPlayer = playerTurn + 1;
             theEnd = false;
             battle = false;
-            playerTurn = 0;
             GenerateLimitForShipsNumber();
             DrawArea(playerTurn);
             Information();
