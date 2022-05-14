@@ -49,11 +49,14 @@ namespace Dz
         private bool battle;
         private bool theEnd;
         private bool canSeeBotArea = false;
-        private int playersAlive;
-        private int? roundsForWin = null;
 
-        private Player[] player = new Player[SetNumberOfPlayers()];
-        
+        private int playersAlive;
+        private int botLevel = 1;
+        private int misses;
+        private int roundsForWin = 1;
+
+        private Player[] players = new Player[2];
+
         private int[] limitForShips = new int[5];
 
         private int playerTurn;
@@ -63,81 +66,170 @@ namespace Dz
 
         static void Main()
         {
-            var dz = new Dz();            
-            dz.Settings();
+            var dz = new Dz();
+            dz.Lobby();
         }
 
-        static int SetNumberOfPlayers()
+        private void LobbyOutput()
         {
-            while (true)
-            {
-                Console.Clear();
-                Console.WriteLine("Enter number of players");
-                Console.WriteLine("Min - 2, Max - 4");
-                var key = Console.ReadKey();
-                switch (key.Key)
-                {
-                    case ConsoleKey.NumPad2:
-                    case ConsoleKey.D2:
-                        return 2;
-                    case ConsoleKey.NumPad3:
-                    case ConsoleKey.D3:
-                        return 3;
-                    case ConsoleKey.NumPad4:
-                    case ConsoleKey.D4:
-                        return 4;
-                }
-            }
+            Console.WriteLine("Press S to change number of players");
+            Console.WriteLine($"(Current number of players = {players.Length})");
+            Console.WriteLine();
+            Console.WriteLine("Press C to change bot settings");
+            Console.WriteLine();
+            Console.WriteLine("Press R to change number of rounds to win");
+            Console.WriteLine($"(Current rounds for win = {roundsForWin})");
+            Console.WriteLine();
+            Console.WriteLine("Press Enter to start game");
         }
 
-        private void Settings()
+        private void Lobby()
         {
-            while (roundsForWin == null)
-            {
-                Console.Clear();
-                Console.WriteLine("Enter number of won rounds that needed for win in the game!");
-                Console.WriteLine("You can enter number from 1 to 5");
-                roundsForWin = EnterNum();
-            }
             bool start = false;
             while (!start)
             {
-                int? num;
                 Console.Clear();
-                for (int i = 0; i < player.Length; i++)
-                {
-                    if (player[i].bot)
-                        Console.WriteLine($"Player {i + 1} is a bot");
-                    else
-                        Console.WriteLine($"Player {i + 1} is a human");
-                }
-                Console.WriteLine();
-                if (canSeeBotArea)
-                    Console.WriteLine("Press S to don't see bot area");
-                else
-                    Console.WriteLine("Press S to see bot area");
-                Console.WriteLine("Press Enter to start game");
-                num = EnterNum() - 1;
+                LobbyOutput();
+                key = Console.ReadKey();
                 switch (key.Key)
-                {                    
+                {
+                    case ConsoleKey.R:
+                        SetNumberOfRoundsToWin();
+                        break;
+                    case ConsoleKey.C:
+                        ChangeBotSettings();
+                        break;
+                    case ConsoleKey.S:
+                        SetNumberOfPlayers();
+                        break;
                     case ConsoleKey.Enter:
                         start = true;
                         break;
-                    case ConsoleKey.S:
-                        canSeeBotArea = !canSeeBotArea;
-                        break;
                 }
-                if (num != null && player.Length > num)
-                    player[Convert.ToInt32(num)].bot = !player[Convert.ToInt32(num)].bot;
             }
-            for (int i = 0; i < player.Length; i++)
+            for (int i = 0; i < players.Length; i++)
             {
-                player[i].wins = 0;
+                players[i].wins = 0;
             }
             Start();
         }
 
-        private int? EnterNum()
+        private void SetNumberOfPlayers()
+        {
+            int num = 0;
+            bool exit = false;
+            while (!exit)
+            {
+                Console.Clear();
+                Console.WriteLine("Enter number of players");
+                Console.WriteLine("Min - 2, Max - 4");
+                Console.WriteLine($"(Current number of players = {players.Length})");
+                Console.WriteLine();
+                Console.WriteLine("Press Enter to exit from this menu");
+                num = EnterNum(num);
+                if (num > 1 && num < 5)
+                {
+                    Array.Resize(ref players, Convert.ToInt32(num));
+                }
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    exit = true;
+                }
+            }
+        }
+
+        private void SetNumberOfRoundsToWin()
+        {
+            bool exit = false;
+            while (!exit)
+            {
+                Console.Clear();
+                Console.WriteLine("Enter number of won rounds that needed for win in the game!");
+                Console.WriteLine("You can enter number from 1 to 5");
+                Console.WriteLine($"(Current rounds for win = {roundsForWin})");
+                Console.WriteLine();
+                Console.WriteLine("Press Enter to exit from this menu");
+                roundsForWin = EnterNum(roundsForWin);
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    exit = true;
+                }
+            }
+        }
+
+        private void ChangeBotSettings()
+        {
+            bool exit = false;
+            int numberOfPlayer;
+            while (!exit)
+            {
+                numberOfPlayer = 0;
+                BotSettingsOutput();
+                numberOfPlayer = EnterNum(numberOfPlayer) - 1;
+                if (players.Length > numberOfPlayer && numberOfPlayer >= 0)
+                {
+                    int num = Convert.ToInt32(numberOfPlayer);
+                    players[num].bot = !players[num].bot;
+                }
+                switch (key.Key)
+                {
+                    case ConsoleKey.S:
+                        canSeeBotArea = !canSeeBotArea;
+                        break;
+                    case ConsoleKey.L:
+                        ChangeBotLevel();
+                        break;
+                    case ConsoleKey.Enter:
+                        exit = true;
+                        break;
+                }
+            }
+        }
+
+        private void ChangeBotLevel()
+        {
+            int num = 0;
+            bool exit = false;
+            while (!exit)
+            {
+                Console.Clear();
+                Console.WriteLine($"Current level of bots = {botLevel}");
+                Console.WriteLine("Min = 1, Max = 3");
+                Console.WriteLine();
+                Console.WriteLine("Press Enter to exit from this menu");
+                num = EnterNum(num);
+                if (num > 0 && num <= 3)
+                {
+                    botLevel = Convert.ToInt32(num);
+                }
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    exit = true;
+                }
+            }
+        }
+
+        private void BotSettingsOutput()
+        {
+            Console.Clear();
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].bot)
+                    Console.WriteLine($"Player {i + 1} is a bot");
+                else
+                    Console.WriteLine($"Player {i + 1} is a human");
+            }
+            Console.WriteLine();
+            if (canSeeBotArea)
+                Console.WriteLine("Press S to don't see bot area");
+            else
+                Console.WriteLine("Press S to see bot area");
+            Console.WriteLine("Press L to change bot level");
+            Console.WriteLine();
+            Console.WriteLine("Press Enter to exit from this menu");
+        }
+        
+        private int EnterNum(int num)
         {
             key = Console.ReadKey();
             switch (key.Key)
@@ -158,26 +250,27 @@ namespace Dz
                 case ConsoleKey.D5:
                     return 5;
                 default:
-                    return null;
+                    return num;
             }
         }
 
         private void Start()
         {
             Console.Clear();
-            for (int i = 0; i < player.Length; i++)
+            for (int i = 0; i < players.Length; i++)
             {
-                player[i].array = new string[arraySize, arraySize];
-                player[i].numberOfLivingShipCells = 0;
-                player[i].playerX = 0;
-                player[i].playerY = 0;
+                players[i].array = new string[arraySize, arraySize];
+                players[i].numberOfLivingShipCells = 0;
+                players[i].playerX = 0;
+                players[i].playerY = 0;
                 GenerateArea(i);
             }
-            playersAlive = player.Length;
+            playersAlive = players.Length;
             playerTurn = 0;
             nextPlayer = playerTurn + 1;
             theEnd = false;
             battle = false;
+            misses = 0;
             GenerateLimitForShipsNumber();
             DrawArea(playerTurn);
             Information();
@@ -190,7 +283,7 @@ namespace Dz
             {
                 for (int j = 0; j < arraySize; j++)
                 {
-                    player[playerNumber].array[i, j] = Symbols.voidCell;
+                    players[playerNumber].array[i, j] = Symbols.voidCell;
                 }
             }
         }
@@ -205,7 +298,7 @@ namespace Dz
 
         private void GenerationShips(int size)
         {
-            if (!player[playerTurn].bot)
+            if (!players[playerTurn].bot)
             {
                 Console.WriteLine("Press arrow for choosing direction");
                 key = Console.ReadKey();
@@ -218,7 +311,7 @@ namespace Dz
             if (direction != Direction.nothing && CanYouSpawnShip(size))
             {
                 limitForShips[size]--;
-                player[playerTurn].numberOfLivingShipCells += size;
+                players[playerTurn].numberOfLivingShipCells += size;
                 GenerateShipCells(size);
                 int j = 1;
                 for (int i = 1; i < limitForShips.Length; i++)
@@ -230,7 +323,7 @@ namespace Dz
                 }
                 if (j >= limitForShips.Length)
                 {
-                    if (playerTurn == player.Length - 1)
+                    if (playerTurn == players.Length - 1)
                     {
                         battle = true;
                     }
@@ -242,7 +335,7 @@ namespace Dz
                     nextPlayer = ChangeTurn(nextPlayer);
                 }
             }
-            else if (!player[playerTurn].bot)
+            else if (!players[playerTurn].bot)
             {
                 Thread.Sleep(1169);
             }
@@ -272,10 +365,10 @@ namespace Dz
 
         private void GenerateShipCells(int size)
         {
-            int x = player[playerTurn].playerX, y = player[playerTurn].playerY;
+            int x = players[playerTurn].playerX, y = players[playerTurn].playerY;
             for (int l = 0; l < size; l++)
             {
-                player[playerTurn].array[y, x] = Symbols.ship;
+                players[playerTurn].array[y, x] = Symbols.ship;
                 x = ChangeX(x);
                 y = ChangeY(y);
             }
@@ -286,15 +379,15 @@ namespace Dz
             int size = 1;
             while (!theEnd)
             {
-                if (!player[playerTurn].bot)
+                if (!players[playerTurn].bot)
                 {
                     key = Console.ReadKey();
                     size = EnterSize(size);
                     DirectionChange();
-                    if (ThisCoordInArray(ChangeX(player[playerTurn].playerX)))
-                        player[playerTurn].playerX = ChangeX(player[playerTurn].playerX);
-                    if (ThisCoordInArray(ChangeY(player[playerTurn].playerY)))
-                        player[playerTurn].playerY = ChangeY(player[playerTurn].playerY);
+                    if (ThisCoordInArray(ChangeX(players[playerTurn].playerX)))
+                        players[playerTurn].playerX = ChangeX(players[playerTurn].playerX);
+                    if (ThisCoordInArray(ChangeY(players[playerTurn].playerY)))
+                        players[playerTurn].playerY = ChangeY(players[playerTurn].playerY);
                     switch (key.Key)
                     {
                         case ConsoleKey.H:
@@ -304,7 +397,7 @@ namespace Dz
                             Start();
                             break;
                         case ConsoleKey.S:
-                            Settings();
+                            Lobby();
                             break;
                         case ConsoleKey.Enter:
                             if (battle)
@@ -317,8 +410,8 @@ namespace Dz
                 else
                 {                    
                     Random rand = new Random();
-                    player[playerTurn].playerX = rand.Next(0, arraySize);
-                    player[playerTurn].playerY = rand.Next(0, arraySize);
+                    players[playerTurn].playerX = rand.Next(0, arraySize);
+                    players[playerTurn].playerY = rand.Next(0, arraySize);
                     Console.Clear();
                     if (battle)
                         DrawArea(nextPlayer);
@@ -341,7 +434,7 @@ namespace Dz
                 Console.Clear();
                 if (battle)                
                     DrawArea(nextPlayer);                
-                if (!player[playerTurn].bot || (player[playerTurn].bot && canSeeBotArea))
+                if (!players[playerTurn].bot || (players[playerTurn].bot && canSeeBotArea))
                 {
                     DrawArea(playerTurn);
                     Information();
@@ -382,7 +475,7 @@ namespace Dz
                 Console.WriteLine("You hited an enemy!!!");
                 Console.WriteLine("You can walk again!!!");
                 NextPlayer().array[CurrentPlayer().playerY, CurrentPlayer().playerX] = Symbols.hit;
-                player[nextPlayer].numberOfLivingShipCells--; // tyt bez etogo nikak
+                players[nextPlayer].numberOfLivingShipCells--; // tyt bez etogo nikak
                 if (NextPlayer().numberOfLivingShipCells <= 0)
                 {
                     Console.WriteLine($"{nextPlayer + 1} player is died...");
@@ -392,10 +485,14 @@ namespace Dz
             }
             else if (NextPlayer().array[CurrentPlayer().playerY, CurrentPlayer().playerX] == Symbols.voidCell)
             {
+                misses++;
                 Console.WriteLine("You missed :(");
                 NextPlayer().array[CurrentPlayer().playerY, CurrentPlayer().playerX] = Symbols.miss;
-                playerTurn = ChangeTurn(playerTurn);
-                nextPlayer = ChangeTurn(playerTurn);
+                if ((CurrentPlayer().bot && misses >= botLevel) || !CurrentPlayer().bot)
+                {
+                    playerTurn = ChangeTurn(playerTurn);
+                    nextPlayer = ChangeTurn(playerTurn);
+                }
             }
             else
             {
@@ -405,21 +502,21 @@ namespace Dz
         }
 
         private Player NextPlayer()
-            => player[nextPlayer];
+            => players[nextPlayer];
 
         private Player CurrentPlayer()
-            => player[playerTurn];
+            => players[playerTurn];
 
         private int ChangeTurn(int num)
         {
-            for (int i = 0; i < player.Length; i++)
+            for (int i = 0; i < players.Length; i++)
             {
                 num++;
-                if (num >= player.Length)
+                if (num >= players.Length)
                 {
                     num = 0;
                 }
-                if (player[num].numberOfLivingShipCells > 0 && battle || !battle)
+                if (players[num].numberOfLivingShipCells > 0 && battle || !battle)
                 {
                     break;
                 }
@@ -432,6 +529,7 @@ namespace Dz
                 Console.WriteLine($"Next player: {nextPlayer + 1}");
                 var key = Console.ReadKey();
             }
+            misses = 0;
             return num;
         }
 
@@ -470,11 +568,11 @@ namespace Dz
                     {
                         Console.BackgroundColor = ConsoleColor.Red;                        
                     }
-                    ChangeForegroundColor(player[numOfPlayer].array[i,j]);
-                    if (numOfPlayer != playerTurn && player[numOfPlayer].array[i, j] == Symbols.ship)
+                    ChangeForegroundColor(players[numOfPlayer].array[i,j]);
+                    if (numOfPlayer != playerTurn && players[numOfPlayer].array[i, j] == Symbols.ship)
                         Console.Write(Symbols.voidCell);
                     else
-                        Console.Write(player[numOfPlayer].array[i, j]);
+                        Console.Write(players[numOfPlayer].array[i, j]);
                 }
                 Console.WriteLine();
             }
@@ -482,7 +580,7 @@ namespace Dz
         }
 
         private bool ArrayCoordsEqualsPlayerCoords(int i, int j)
-            => i == player[playerTurn].playerY && j == player[playerTurn].playerX;
+            => i == players[playerTurn].playerY && j == players[playerTurn].playerX;
 
         private bool ThisArrayNeededForDrawingPlayer(int numOfPlayer)
             => (!battle && numOfPlayer == playerTurn) || (battle && numOfPlayer == nextPlayer);
@@ -499,23 +597,23 @@ namespace Dz
         private void TheEnd()
         {
             Console.Clear();
-            player[playerTurn].wins++;
-            if (player[playerTurn].wins >= roundsForWin)
+            players[playerTurn].wins++;
+            if (players[playerTurn].wins >= roundsForWin)
             {
                 Console.Clear();
                 Console.WriteLine($"{playerTurn + 1} player won in this game!!!");
                 Console.WriteLine("Press any key to continue");
                 Console.ReadKey();
-                Settings();
+                Lobby();
             }
             else
             {
                 Console.WriteLine($"{playerTurn + 1} player won this round!!!");
                 Console.WriteLine();
                 Console.WriteLine("Wins of players:");
-                for (int i = 0; i < player.Length; i++)
+                for (int i = 0; i < players.Length; i++)
                 {
-                    Console.WriteLine($"Player {i + 1}: {player[i].wins} wins");
+                    Console.WriteLine($"Player {i + 1}: {players[i].wins} wins");
                 }
                 Console.WriteLine();
                 Console.WriteLine("Press any key to continue");
@@ -531,8 +629,8 @@ namespace Dz
                 Console.WriteLine("You haven't limit for this ship");
                 return false;
             }
-            int x = player[playerTurn].playerX;
-            int y = player[playerTurn].playerY;            
+            int x = players[playerTurn].playerX;
+            int y = players[playerTurn].playerY;            
             for (int l = 0; l < shipSize; l++)
             {
                 if (!ThisCoordInArray(x) || !ThisCoordInArray(y))
@@ -544,7 +642,7 @@ namespace Dz
                 {                    
                     for (int j = x - 1; j <= x + 1; j++)
                     {
-                        if (ThisCoordInArray(i) && ThisCoordInArray(j) && player[playerTurn].array[i, j] == Symbols.ship)
+                        if (ThisCoordInArray(i) && ThisCoordInArray(j) && players[playerTurn].array[i, j] == Symbols.ship)
                         {
                             Console.WriteLine("You can't place ship in this place");
                             return false;
