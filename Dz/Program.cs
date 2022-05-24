@@ -38,7 +38,7 @@ namespace Dz
         nothing
     }
 
-    class Dz
+    class ShipBattle
     {
         private Direction direction;
 
@@ -66,46 +66,107 @@ namespace Dz
 
         static void Main()
         {
-            var dz = new Dz();
+            var dz = new ShipBattle();
             dz.Lobby();
         }
 
-        private void LobbyOutput()
+        private void LobbyOutput(bool mainMenu)
         {
-            Console.WriteLine("Press S to change number of players");
-            Console.WriteLine($"(Current number of players = {players.Length})");
-            Console.WriteLine();
-            Console.WriteLine("Press C to change bot settings");
-            Console.WriteLine();
-            Console.WriteLine("Press R to change number of rounds to win");
-            Console.WriteLine($"(Current rounds for win = {roundsForWin})");
-            Console.WriteLine();
-            Console.WriteLine("Press Enter to start game");
+            Console.Clear();
+            if(mainMenu)
+            {
+                Console.WriteLine("Press S to change number of players");
+                Console.WriteLine($"(Current number of players = {players.Length})");
+                Console.WriteLine();
+                Console.WriteLine("Press C to change bot settings");
+                Console.WriteLine();
+                Console.WriteLine("Press R to change number of rounds to win");
+                Console.WriteLine($"(Current rounds for win = {roundsForWin})");
+                Console.WriteLine();
+                Console.WriteLine("Press Enter to start game");
+            }
+            else
+            {
+                switch (key.Key)
+                {
+                    case ConsoleKey.S:
+                        Console.WriteLine("Enter number of players");
+                        Console.WriteLine("Min - 2, Max - 4");
+                        Console.WriteLine($"(Current number of players = {players.Length})");
+                        break;
+                    case ConsoleKey.R:
+                        Console.WriteLine("Enter number of won rounds that needed for win in the game!");
+                        Console.WriteLine("You can enter number from 1 to 5");
+                        Console.WriteLine($"(Current rounds for win = {roundsForWin})");
+                        break;
+                    case ConsoleKey.C:
+                        for (int i = 0; i < players.Length; i++)
+                        {
+                            if (players[i].bot)
+                                Console.WriteLine($"Player {i + 1} is a bot");
+                            else
+                                Console.WriteLine($"Player {i + 1} is a human");
+                        }
+                        Console.WriteLine();
+                        if (canSeeBotArea)
+                            Console.WriteLine("Press S to don't see bot area");
+                        else
+                            Console.WriteLine("Press S to see bot area");
+                        Console.WriteLine("Press L to change bot level");
+                        break;
+                    case ConsoleKey.L:
+                        Console.WriteLine($"Current level of bots = {botLevel}");
+                        Console.WriteLine("Min = 1, Max = 3");
+                        break;
+                    default:
+                        Console.WriteLine("Wrong command, try again");
+                        Thread.Sleep(1200);
+                        break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("Press Enter to exit");
+            }        
         }
 
         private void Lobby()
         {
-            bool start = false;
-            while (!start)
+            bool lobby = true;
+            bool mainMenu;
+            while (lobby)
             {
-                Console.Clear();
-                LobbyOutput();
+                mainMenu = true;
+                LobbyOutput(mainMenu);
                 key = Console.ReadKey();
-                switch (key.Key)
+                if (key.Key == ConsoleKey.Enter)
                 {
-                    case ConsoleKey.R:
-                        SetNumberOfRoundsToWin();
-                        break;
-                    case ConsoleKey.C:
-                        ChangeBotSettings();
-                        break;
-                    case ConsoleKey.S:
-                        SetNumberOfPlayers();
-                        break;
-                    case ConsoleKey.Enter:
-                        start = true;
-                        break;
+                    lobby = false;
                 }
+                else
+                {
+                    mainMenu = false;
+                }
+                while (!mainMenu)
+                {
+                    LobbyOutput(mainMenu);
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.R:
+                            SetNumberOfRoundsToWin();
+                            break;
+                        case ConsoleKey.C:
+                            SetBots();
+                            break;
+                        case ConsoleKey.S:
+                            SetNumberOfPlayers();
+                            break;
+                        case ConsoleKey.L:
+                            BotSettings();
+                            break;
+                        case ConsoleKey.Enter:
+                            mainMenu = true;
+                            break;
+                    }
+                }                
             }
             for (int i = 0; i < players.Length; i++)
             {
@@ -117,86 +178,44 @@ namespace Dz
         private void SetNumberOfPlayers()
         {
             int num = 0;
-            bool exit = false;
-            while (!exit)
+            num = EnterNum(num);
+            if (num > 1 && num < 5)
             {
-                Console.Clear();
-                Console.WriteLine("Enter number of players");
-                Console.WriteLine("Min - 2, Max - 4");
-                Console.WriteLine($"(Current number of players = {players.Length})");
-                Console.WriteLine();
-                Console.WriteLine("Press Enter to exit from this menu");
-                num = EnterNum(num);
-                if (num > 1 && num < 5)
-                {
-                    Array.Resize(ref players, Convert.ToInt32(num));
-                }
-                if (key.Key == ConsoleKey.Enter)
-                {
-                    exit = true;
-                }
+                Array.Resize(ref players, Convert.ToInt32(num));
             }
         }
 
         private void SetNumberOfRoundsToWin()
         {
-            bool exit = false;
-            while (!exit)
-            {
-                Console.Clear();
-                Console.WriteLine("Enter number of won rounds that needed for win in the game!");
-                Console.WriteLine("You can enter number from 1 to 5");
-                Console.WriteLine($"(Current rounds for win = {roundsForWin})");
-                Console.WriteLine();
-                Console.WriteLine("Press Enter to exit from this menu");
-                roundsForWin = EnterNum(roundsForWin);
-                if (key.Key == ConsoleKey.Enter)
-                {
-                    exit = true;
-                }
-            }
+            roundsForWin = EnterNum(roundsForWin);
         }
 
-        private void ChangeBotSettings()
+        private void SetBots()
         {
-            bool exit = false;
-            int numberOfPlayer;
-            while (!exit)
+            int numberOfPlayer = 0;
+            numberOfPlayer = EnterNum(numberOfPlayer) - 1;
+            if (players.Length > numberOfPlayer && numberOfPlayer >= 0)
             {
-                numberOfPlayer = 0;
-                BotSettingsOutput();
-                numberOfPlayer = EnterNum(numberOfPlayer) - 1;
-                if (players.Length > numberOfPlayer && numberOfPlayer >= 0)
-                {
-                    int num = Convert.ToInt32(numberOfPlayer);
-                    players[num].bot = !players[num].bot;
-                }
-                switch (key.Key)
-                {
-                    case ConsoleKey.S:
-                        canSeeBotArea = !canSeeBotArea;
-                        break;
-                    case ConsoleKey.L:
-                        ChangeBotLevel();
-                        break;
-                    case ConsoleKey.Enter:
-                        exit = true;
-                        break;
-                }
+                int num = Convert.ToInt32(numberOfPlayer);
+                players[num].bot = !players[num].bot;
+            }
+            switch (key.Key)
+            {
+                case ConsoleKey.S:
+                    canSeeBotArea = !canSeeBotArea;
+                    break;
+                case ConsoleKey.L:
+                    BotSettings();
+                    break;
             }
         }
 
-        private void ChangeBotLevel()
+        private void BotSettings()
         {
             int num = 0;
             bool exit = false;
             while (!exit)
             {
-                Console.Clear();
-                Console.WriteLine($"Current level of bots = {botLevel}");
-                Console.WriteLine("Min = 1, Max = 3");
-                Console.WriteLine();
-                Console.WriteLine("Press Enter to exit from this menu");
                 num = EnterNum(num);
                 if (num > 0 && num <= 3)
                 {
@@ -209,26 +228,6 @@ namespace Dz
             }
         }
 
-        private void BotSettingsOutput()
-        {
-            Console.Clear();
-            for (int i = 0; i < players.Length; i++)
-            {
-                if (players[i].bot)
-                    Console.WriteLine($"Player {i + 1} is a bot");
-                else
-                    Console.WriteLine($"Player {i + 1} is a human");
-            }
-            Console.WriteLine();
-            if (canSeeBotArea)
-                Console.WriteLine("Press S to don't see bot area");
-            else
-                Console.WriteLine("Press S to see bot area");
-            Console.WriteLine("Press L to change bot level");
-            Console.WriteLine();
-            Console.WriteLine("Press Enter to exit from this menu");
-        }
-        
         private int EnterNum(int num)
         {
             key = Console.ReadKey();
